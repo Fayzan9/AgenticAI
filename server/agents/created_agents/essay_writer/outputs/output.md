@@ -1,3 +1,4 @@
+
 # Essay Writer Agent Output Format
 
 The output is a structured essay in plain text, optionally including section headers and references if requested.

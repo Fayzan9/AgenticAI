@@ -33,11 +33,12 @@ export default function AgentEditPage({ params }: { params: Promise<{ agentId: s
   const [saveStatus, setSaveStatus] = useState<"saved" | "saving" | "unsaved">("saved");
   const [isRenamingAgent, setIsRenamingAgent] = useState(false);
   const [tempAgentName, setTempAgentName] = useState(agentId);
+  /** In-session edits: path -> content. Persisted in browser until "Save Changes". */
+  const [sessionEdits, setSessionEdits] = useState<Record<string, string>>({});
 
   // Refs
   const isResizing = useRef(false);
   const explorerRef = useRef<HTMLDivElement>(null);
-  const autoSaveTimer = useRef<NodeJS.Timeout | null>(null);
 
   const toggleFolder = (path: string) => {
     setExpandedFolders((prev) => {
@@ -74,21 +75,14 @@ export default function AgentEditPage({ params }: { params: Promise<{ agentId: s
       window.removeEventListener("mousemove", handleMouseMove);
       window.removeEventListener("mouseup", handleMouseUp);
       window.removeEventListener("click", handleClickOutside);
-      if (autoSaveTimer.current) clearTimeout(autoSaveTimer.current);
     };
   }, [agentId]);
 
-  // Auto-save logic
+  // Derive unsaved state from session edits (manual save only; no auto-save)
+  const hasUnsavedEdits = Object.keys(sessionEdits).length > 0;
   useEffect(() => {
-    if (!selectedFile || loading) return;
-    
-    setSaveStatus("unsaved");
-    if (autoSaveTimer.current) clearTimeout(autoSaveTimer.current);
-    
-    autoSaveTimer.current = setTimeout(() => {
-      saveFileContent();
-    }, 1500);
-  }, [fileContent]);
+    setSaveStatus(hasUnsavedEdits ? "unsaved" : "saved");
+  }, [hasUnsavedEdits]);
 
   const fetchFiles = () => {
     fetch(`http://localhost:8000/api/agents/${agentId}/files`)
@@ -99,8 +93,17 @@ export default function AgentEditPage({ params }: { params: Promise<{ agentId: s
       });
   };
 
-    const loadFileContent = (path: string) => {
+  const loadFileContent = (path: string) => {
+    // Persist current file's content to session edits before switching
+    if (selectedFile) {
+      setSessionEdits((prev) => ({ ...prev, [selectedFile]: fileContent }));
+    }
     setSelectedFile(path);
+    const edited = sessionEdits[path];
+    if (edited !== undefined) {
+      setFileContent(edited);
+      return;
+    }
     fetch(`http://localhost:8000/api/agents/${agentId}/files/${path}`)
       .then((res) => res.json())
       .then((data) => {
@@ -108,18 +111,30 @@ export default function AgentEditPage({ params }: { params: Promise<{ agentId: s
       });
   };
 
-  const saveFileContent = () => {
-    if (!selectedFile) return;
+  /** Save all in-session edits to the server at once (manual save). */
+  const saveAllChanges = () => {
+    const paths = Object.keys(sessionEdits);
+    if (paths.length === 0) return;
     setSaving(true);
     setSaveStatus("saving");
-    fetch(`http://localhost:8000/api/agents/${agentId}/files/${selectedFile}`, {
-      method: "POST",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ content: fileContent }),
-    })
-      .then(() => {
+    Promise.all(
+      paths.map((filePath) =>
+        fetch(`http://localhost:8000/api/agents/${agentId}/files/${filePath}`, {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ content: sessionEdits[filePath] }),
+        })
+      )
+    )
+      .then((results) => {
+        const allOk = results.every((r) => r.ok);
+        if (allOk) {
+          setSessionEdits({});
+          setSaveStatus("saved");
+        } else {
+          setSaveStatus("unsaved");
+        }
         setSaving(false);
-        setSaveStatus("saved");
       })
       .catch(() => {
         setSaving(false);
@@ -168,6 +183,13 @@ export default function AgentEditPage({ params }: { params: Promise<{ agentId: s
         .then((data) => {
           if (data.status === "ok") {
             if (selectedFile === oldPath) setSelectedFile(newPath);
+            setSessionEdits((prev) => {
+              if (prev[oldPath] === undefined) return prev;
+              const next = { ...prev };
+              next[newPath] = next[oldPath];
+              delete next[oldPath];
+              return next;
+            });
             setNewPathName("");
             setManagementAction(null);
             fetchFiles();
@@ -200,7 +222,6 @@ export default function AgentEditPage({ params }: { params: Promise<{ agentId: s
   };
 
   const handleDeletePath = (path: string) => {
-    if (!confirm(`Are you sure you want to delete ${path}?`)) return;
     fetch(`http://localhost:8000/api/agents/${agentId}/files/${path}`, {
       method: "DELETE",
     })
@@ -462,11 +483,11 @@ export default function AgentEditPage({ params }: { params: Promise<{ agentId: s
           {selectedFile && (
             <div className="p-4 border-t border-gray-50 bg-white">
               <button
-                onClick={saveFileContent}
-                disabled={saving || saveStatus === "saved"}
+                onClick={saveAllChanges}
+                disabled={saving || !hasUnsavedEdits}
                 className={`w-full h-10 rounded-xl text-sm font-semibold transition-all shadow-sm active:scale-[0.98] flex items-center justify-center gap-2 ${
-                  saveStatus === "saved" 
-                    ? "bg-gray-50 text-gray-400 border border-gray-100 cursor-default" 
+                  !hasUnsavedEdits
+                    ? "bg-gray-50 text-gray-400 border border-gray-100 cursor-default"
                     : "bg-accent text-white hover:bg-accent-dark"
                 }`}
               >
@@ -510,7 +531,13 @@ export default function AgentEditPage({ params }: { params: Promise<{ agentId: s
               </div>
               <textarea
                 value={fileContent}
-                onChange={(e) => setFileContent(e.target.value)}
+                onChange={(e) => {
+                  const v = e.target.value;
+                  setFileContent(v);
+                  if (selectedFile) {
+                    setSessionEdits((prev) => ({ ...prev, [selectedFile]: v }));
+                  }
+                }}
                 className="flex-1 w-full p-8 font-mono text-sm text-gray-800 focus:outline-none resize-none leading-relaxed bg-white"
                 spellCheck={false}
                 placeholder="Start typing..."
