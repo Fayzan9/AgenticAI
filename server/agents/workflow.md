@@ -71,21 +71,39 @@ Determine:
 
 ## 4. Identify Relevant Agents
 
-Check agents inside:
+### Step 1 — Determine if an Agent is Needed
+
+First, decide whether the current request requires using any agent.
+
+If **no agent is required**, continue the process without reading any agent files.
+
+If **an agent is required**, proceed to Step 2.
+
+### Step 2 — Check Available Agents
+
+Look for available agents inside:
 
 ```
 created_agents/
 ```
 
-For each agent:
+Identify which agent (if any) is relevant to the current request.
 
-Read only:
+### Step 3 — Read the Agent Description
+
+For the selected agent, read only:
 
 ```
 description.md
 ```
 
-⚠️ Do **not** read these files yet:
+Use the description to confirm that the agent is appropriate for the task.
+
+### Important Rules
+
+❗ **Do not read any agent files (including `description.md`) unless you have determined that an agent is required.**
+
+⚠️ **Do not read the following files unless you are executing the agent:**
 
 ```
 agent.md

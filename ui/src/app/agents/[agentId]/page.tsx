@@ -28,7 +28,7 @@ export default function AgentEditPage({ params }: { params: Promise<{ agentId: s
   const [managementAction, setManagementAction] = useState<{ type: "file" | "folder" | "rename"; path: string } | null>(null);
   const [newPathName, setNewPathName] = useState("");
   const [explorerWidth, setExplorerWidth] = useState(260);
-  const [contextMenu, setContextMenu] = useState<{ x: number; y: number; node: FileNode } | null>(null);
+  const [contextMenu, setContextMenu] = useState<{ x: number; y: number; node: FileNode | null } | null>(null);
   const [resizing, setResizing] = useState(false);
   const [saveStatus, setSaveStatus] = useState<"saved" | "saving" | "unsaved">("saved");
   const [isRenamingAgent, setIsRenamingAgent] = useState(false);
@@ -260,6 +260,7 @@ export default function AgentEditPage({ params }: { params: Promise<{ agentId: s
                   onClick={() => node.type === "file" ? loadFileContent(node.path) : toggleFolder(node.path)}
                   onDoubleClick={(e) => {
                     e.preventDefault();
+                    e.stopPropagation();
                     setManagementAction({ type: "rename", path: node.path });
                     setNewPathName(node.name);
                   }}
@@ -417,7 +418,21 @@ export default function AgentEditPage({ params }: { params: Promise<{ agentId: s
               </svg>
             </div>
           </div>
-          <div className="flex-1 overflow-y-auto p-2">
+          <div 
+            className="flex-1 overflow-y-auto p-2"
+            onDoubleClick={(e) => {
+              if (e.target === e.currentTarget) {
+                e.preventDefault();
+                setContextMenu({ x: e.clientX, y: e.clientY, node: null });
+              }
+            }}
+            onContextMenu={(e) => {
+              if (e.target === e.currentTarget) {
+                e.preventDefault();
+                setContextMenu({ x: e.clientX, y: e.clientY, node: null });
+              }
+            }}
+          >
             {managementAction && managementAction.path === "" && (
               <div className="px-3 py-2 border-b border-gray-100 bg-gray-50/50 mb-2 rounded-lg">
                 <div className="text-[10px] font-bold text-accent uppercase mb-2">
@@ -517,48 +532,69 @@ export default function AgentEditPage({ params }: { params: Promise<{ agentId: s
           style={{ top: contextMenu.y, left: contextMenu.x }}
           onClick={(e) => e.stopPropagation()}
         >
-          {contextMenu.node.type === "directory" && (
+          {!contextMenu.node ? (
             <>
               <button
-                onClick={() => { setManagementAction({ type: "file", path: contextMenu.node.path }); setNewPathName(""); setContextMenu(null); }}
+                onClick={() => { setManagementAction({ type: "file", path: "" }); setNewPathName(""); setContextMenu(null); }}
                 className="w-full text-left px-4 py-1.5 text-xs text-gray-600 hover:bg-gray-50 flex items-center gap-2"
               >
                 <FileIcon className="w-3.5 h-3.5" />
                 New File
               </button>
               <button
-                onClick={() => { setManagementAction({ type: "folder", path: contextMenu.node.path }); setNewPathName(""); setContextMenu(null); }}
+                onClick={() => { setManagementAction({ type: "folder", path: "" }); setNewPathName(""); setContextMenu(null); }}
                 className="w-full text-left px-4 py-1.5 text-xs text-gray-600 hover:bg-gray-50 flex items-center gap-2"
               >
                 <FolderIcon className="w-3.5 h-3.5" />
                 New Folder
               </button>
-              <div className="my-1 border-t border-gray-100" />
+            </>
+          ) : (
+            <>
+              {contextMenu.node.type === "directory" && (
+                <>
+                  <button
+                    onClick={() => { setManagementAction({ type: "file", path: contextMenu.node!.path }); setNewPathName(""); setContextMenu(null); }}
+                    className="w-full text-left px-4 py-1.5 text-xs text-gray-600 hover:bg-gray-50 flex items-center gap-2"
+                  >
+                    <FileIcon className="w-3.5 h-3.5" />
+                    New File
+                  </button>
+                  <button
+                    onClick={() => { setManagementAction({ type: "folder", path: contextMenu.node!.path }); setNewPathName(""); setContextMenu(null); }}
+                    className="w-full text-left px-4 py-1.5 text-xs text-gray-600 hover:bg-gray-50 flex items-center gap-2"
+                  >
+                    <FolderIcon className="w-3.5 h-3.5" />
+                    New Folder
+                  </button>
+                  <div className="my-1 border-t border-gray-100" />
+                </>
+              )}
+              {contextMenu.node.type === "file" && (
+                <button
+                  onClick={() => { loadFileContent(contextMenu.node!.path); setContextMenu(null); }}
+                  className="w-full text-left px-4 py-1.5 text-xs text-gray-600 hover:bg-gray-50 flex items-center gap-2"
+                >
+                  <FileIcon className="w-3.5 h-3.5" />
+                  Open File
+                </button>
+              )}
+              <button
+                onClick={() => { setManagementAction({ type: "rename", path: contextMenu.node!.path }); setNewPathName(contextMenu.node!.name); setContextMenu(null); }}
+                className="w-full text-left px-4 py-1.5 text-xs text-gray-600 hover:bg-gray-50 flex items-center gap-2"
+              >
+                <PencilIcon className="w-3.5 h-3.5" />
+                Rename
+              </button>
+              <button
+                onClick={() => { handleDeletePath(contextMenu.node!.path); setContextMenu(null); }}
+                className="w-full text-left px-4 py-1.5 text-xs text-red-500 hover:bg-red-50 flex items-center gap-2"
+              >
+                <TrashIcon className="w-3.5 h-3.5" />
+                Delete
+              </button>
             </>
           )}
-          {contextMenu.node.type === "file" && (
-            <button
-              onClick={() => { loadFileContent(contextMenu.node.path); setContextMenu(null); }}
-              className="w-full text-left px-4 py-1.5 text-xs text-gray-600 hover:bg-gray-50 flex items-center gap-2"
-            >
-              <FileIcon className="w-3.5 h-3.5" />
-              Open File
-            </button>
-          )}
-          <button
-            onClick={() => { setManagementAction({ type: "rename", path: contextMenu.node.path }); setNewPathName(contextMenu.node.name); setContextMenu(null); }}
-            className="w-full text-left px-4 py-1.5 text-xs text-gray-600 hover:bg-gray-50 flex items-center gap-2"
-          >
-            <PencilIcon className="w-3.5 h-3.5" />
-            Rename
-          </button>
-          <button
-            onClick={() => { handleDeletePath(contextMenu.node.path); setContextMenu(null); }}
-            className="w-full text-left px-4 py-1.5 text-xs text-red-500 hover:bg-red-50 flex items-center gap-2"
-          >
-            <TrashIcon className="w-3.5 h-3.5" />
-            Delete
-          </button>
         </div>
       )}
     </div>

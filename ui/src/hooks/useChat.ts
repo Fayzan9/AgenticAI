@@ -119,16 +119,16 @@ export function useChat() {
               if (it.type === "agent_message" && it.text) {
                 // Keep only the latest assistant message as the final answer.
                 currentAssistantText = it.text;
+              } else if (it.type === "command_execution") {
+                const cmd = it.command ?? "";
+                const out = (it.aggregated_output ?? "").slice(0, 80);
+                const logObj = { type: "completed", command: cmd, output: out };
+                currentThoughtSteps = [...currentThoughtSteps, logObj];
+                setThought((t) => ({
+                  ...t,
+                  steps: [...t.steps, logObj],
+                }));
               }
-            } else if (event.type === "item.completed" && event.item?.type === "command_execution") {
-              const cmd = event.item.command ?? "";
-              const out = (event.item.aggregated_output ?? "").slice(0, 80);
-              const logObj = { type: "completed", command: cmd, output: out };
-              currentThoughtSteps = [...currentThoughtSteps, logObj];
-              setThought((t) => ({
-                ...t,
-                steps: [...t.steps, logObj],
-              }));
             } else if (event.type === "item.started" && event.item?.type === "command_execution") {
               const cmd = (event.item.command ?? "").replace(/^\/bin\/\w+ -lc '\|'$/g, "").slice(0, 50);
               const logObj = { type: "started", command: event.item?.command ?? "" };
