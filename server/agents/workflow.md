@@ -163,25 +163,6 @@ agent.md
 output_format.md
 ```
 
----
-
-# Agent Registry
-
-| Agent        | Description       |
-| ------------ | ----------------- |
-| essay_writer | Writes essays     |
-| recipe_agent | Generates recipes |
-
-To add a new agent:
-
-1. Create a new folder in `created_agents/`
-2. Add:
-
-```
-agent.md
-description.md
-output_format.md
-```
 
 ---
 
@@ -200,6 +181,14 @@ server
 ├── agents
 │   ├── created_agents
 │   │   ├── essay_writer
+│   │   │   ├── agent.md
+│   │   │   ├── description.md
+│   │   │   └── output_format.md
+│   │   ├── ParagraphCounter
+│   │   │   ├── agent.md
+│   │   │   ├── description.md
+│   │   │   └── output_format.md
+│   │   ├── NewAgent
 │   │   │   ├── agent.md
 │   │   │   ├── description.md
 │   │   │   └── output_format.md

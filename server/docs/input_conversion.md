@@ -1,2 +1,0 @@
-given the input.md file which contains the input needed to run the agent, using that convert that into a proper html file input.html which 
-will be used to render dynamically in the ui for the user to fill it and then run the agent.

@@ -17,6 +17,10 @@ AGENTS_DIR = AGENT_CWD / "created_agents"
 AGENT_TEMPLATE_DIR = BASE_DIR / "agent_template"
 # Path to threads data directory
 THREADS_DIR = BASE_DIR / "data" / "threads"
+# Base data directory
+DATA_DIR = BASE_DIR / "data"
+# Path to files directory
+FILES_DIR = DATA_DIR / "files"
 
 CORS_ORIGINS = ["*"]
 CORS_ALLOW_CREDENTIALS = True

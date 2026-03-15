@@ -11,6 +11,7 @@ from routes.chat import router as chat_router
 from routes.agent import router as agent_router
 from routes.agents_organizer import router as agents_organizer_router
 from routes.threads import router as threads_router
+from routes.files import router as files_router
 
 # Configure logging
 logging.basicConfig(
@@ -59,5 +60,6 @@ app.include_router(chat_router, prefix="/api", tags=["Chat"])
 app.include_router(threads_router, prefix="/api", tags=["Threads"])
 app.include_router(agent_router, prefix="/api", tags=["Agent Operations"])
 app.include_router(agents_organizer_router, prefix="/api", tags=["Agent Management"])
+app.include_router(files_router, prefix="/api", tags=["Files"])
 
 logger.info("Agent API server started successfully")

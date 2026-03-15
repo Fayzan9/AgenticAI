@@ -5,12 +5,14 @@ import { PaperclipIcon, SendIcon } from "./icons";
 
 interface ChatInputProps {
   onSend: (text: string) => void;
+  onUpload?: (files: FileList) => void;
   disabled?: boolean;
   placeholder?: string;
 }
 
-export function ChatInput({ onSend, disabled, placeholder = "Ask anything..." }: ChatInputProps) {
+export function ChatInput({ onSend, onUpload, disabled, placeholder = "Ask anything..." }: ChatInputProps) {
   const textareaRef = useRef<HTMLTextAreaElement>(null);
+  const fileInputRef = useRef<HTMLInputElement>(null);
 
   const handleSend = () => {
     const el = textareaRef.current;
@@ -20,6 +22,14 @@ export function ChatInput({ onSend, disabled, placeholder = "Ask anything..." }:
     onSend(text);
     el.value = "";
     el.style.height = "auto";
+  };
+
+  const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    if (e.target.files && e.target.files.length > 0) {
+      onUpload?.(e.target.files);
+      // Reset input so the same files can be selected again if needed
+      e.target.value = "";
+    }
   };
 
   useEffect(() => {
@@ -38,10 +48,18 @@ export function ChatInput({ onSend, disabled, placeholder = "Ask anything..." }:
       <div className="max-w-3xl mx-auto relative group">
         <div className="absolute inset-0 bg-gray-100 rounded-2xl blur-sm opacity-0 group-focus-within:opacity-40 transition-opacity" />
         <div className="relative bg-white border border-gray-200 rounded-2xl shadow-sm flex items-center px-4 py-3 focus-within:border-accent/40 transition-all">
+          <input 
+            type="file" 
+            ref={fileInputRef} 
+            className="hidden" 
+            multiple 
+            onChange={handleFileChange} 
+          />
           <button
             type="button"
             className="p-2 text-gray-400 hover:text-gray-600 transition-colors"
             aria-label="Attach"
+            onClick={() => fileInputRef.current?.click()}
           >
             <PaperclipIcon className="w-5 h-5" />
           </button>

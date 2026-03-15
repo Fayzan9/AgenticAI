@@ -17,6 +17,7 @@ interface ChatAreaProps {
   thought: ThoughtState;
   streaming: boolean;
   onSendPrompt: (text: string) => void;
+  onUpload?: (files: FileList) => void;
 }
 
 export function ChatArea({
@@ -25,6 +26,7 @@ export function ChatArea({
   thought,
   streaming,
   onSendPrompt,
+  onUpload,
 }: ChatAreaProps) {
   const { toggleSidebar } = useLayout();
   const scrollRef = useRef<HTMLDivElement>(null);
@@ -72,7 +74,7 @@ export function ChatArea({
       </section>
 
       <div className="sticky bottom-0 left-0 right-0 bg-white z-10 border-t border-gray-100">
-        <ChatInput onSend={onSendPrompt} disabled={streaming} />
+        <ChatInput onSend={onSendPrompt} onUpload={onUpload} disabled={streaming} />
       </div>
     </main>
   );

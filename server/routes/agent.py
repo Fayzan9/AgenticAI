@@ -2,7 +2,7 @@
 routes/agent.py: API routes for individual agent operations (files, content)
 """
 from fastapi import APIRouter, BackgroundTasks
-from config import AGENTS_DIR, BASE_DIR
+from config import AGENTS_DIR, AGENT_CWD
 from pydantic import BaseModel
 from services.codex_cli import CodexCLI
 import shutil
@@ -11,10 +11,19 @@ import logging
 logger = logging.getLogger(__name__)
 
 # Path to input_conversion.md instruction file
-INPUT_CONVERSION_DOC = BASE_DIR / "docs" / "input_conversion.md"
+INPUT_CONVERSION_DOC = AGENT_CWD / "input_conversion.md"
 INPUT_CONVERSION_TRIGGER = "inputs/input.md"
 
 router = APIRouter()
+
+
+@router.get("/agents/{agent_id}/input-form")
+def get_input_form(agent_id: str):
+    """Return the input.html content for an agent, or null if it doesn't exist."""
+    html_path = AGENTS_DIR / agent_id / "inputs" / "input.html"
+    if html_path.exists():
+        return {"html": html_path.read_text()}
+    return {"html": None}
 
 
 @router.get("/agents/{agent_id}/files")

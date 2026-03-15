@@ -9,8 +9,40 @@ export default function Home() {
     streaming, 
     thought, 
     sendPrompt, 
-    currentThreadTitle
+    currentThreadTitle,
+    currentThreadId,
+    createNewThread
   } = useThreadContext();
+
+  const handleUpload = async (files: FileList) => {
+    let threadId = currentThreadId;
+    if (!threadId) {
+      const thread = await createNewThread();
+      if (thread) {
+        threadId = thread.id;
+      }
+    }
+    if (!threadId) return;
+
+    const formData = new FormData();
+    formData.append("thread_id", threadId);
+    Array.from(files).forEach((file) => {
+      formData.append("files", file);
+    });
+
+    try {
+      const res = await fetch("/api/upload", {
+        method: "POST",
+        body: formData,
+      });
+      if (!res.ok) {
+        throw new Error("Failed to upload files");
+      }
+      console.log("Files uploaded successfully");
+    } catch (error) {
+      console.error("Error uploading files:", error);
+    }
+  };
 
   return (
     <ChatArea
@@ -19,6 +51,7 @@ export default function Home() {
       thought={thought}
       streaming={streaming}
       onSendPrompt={sendPrompt}
+      onUpload={handleUpload}
     />
   );
 }
