@@ -1,6 +1,6 @@
 "use client";
 
-import { PlusIcon, SettingsIcon, BotIcon, TrashIcon } from "./icons";
+import { PlusIcon, SettingsIcon, BotIcon, TrashIcon, ClockIcon } from "./icons";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { useEffect, useState } from "react";
@@ -169,6 +169,18 @@ export function Sidebar({
           >
             <BotIcon className="w-5 h-5 text-gray-400" />
             <span>Agents</span>
+          </Link>
+
+          <Link
+            href="/executions"
+            className={`w-full flex items-center gap-3 px-3 py-2 text-sm rounded-lg transition-colors ${
+              pathname === "/executions"
+                ? "bg-gray-200 text-gray-900"
+                : "text-gray-600 hover:bg-gray-200"
+            }`}
+          >
+            <ClockIcon className="w-5 h-5 text-gray-400" />
+            <span>Executions</span>
           </Link>
 
           <button

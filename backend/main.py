@@ -10,6 +10,7 @@ from config import CORS_ORIGINS, CORS_ALLOW_CREDENTIALS, CORS_ALLOW_METHODS, COR
 from app.chat.api import router as chat_router
 from app.agent.api import router as agent_router
 from app.agent_explorer.api import router as explorer_router
+from app.agent_executions.api import router as executions_router
 from app.threads.api import router as threads_router
 from app.settings.api import router as settings_router
 from app.uploads.api import router as uploads_router
@@ -53,6 +54,7 @@ app.include_router(chat_router, prefix="/api", tags=["Chat"])
 app.include_router(threads_router, prefix="/api", tags=["Threads"])
 app.include_router(agent_router, prefix="/api", tags=["Agent Operations"])
 app.include_router(explorer_router, prefix="/api", tags=["Agent Management"])
+app.include_router(executions_router, prefix="/api", tags=["Agent Executions"])
 app.include_router(settings_router, prefix="/api", tags=["Settings"])
 app.include_router(uploads_router, prefix="/api", tags=["Uploads"])
 

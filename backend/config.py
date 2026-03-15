@@ -14,6 +14,7 @@ AGENT_TEMPLATE_DIR = AGENT_CWD / "agent_format"
 DATA_DIR = BASE_DIR / "data"
 THREADS_DIR = DATA_DIR / "threads"
 FILES_DIR = DATA_DIR / "files"
+EXECUTIONS_DIR = DATA_DIR / "agent_executions"
 
 CORS_ORIGINS = ["*"]
 CORS_ALLOW_CREDENTIALS = True

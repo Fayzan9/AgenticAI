@@ -6,6 +6,7 @@ import json
 import logging
 import os
 from typing import Optional, Tuple
+from datetime import datetime
 
 from services.codex_cli import CodexCLI
 from config import AGENT_CWD
@@ -170,6 +171,151 @@ def stream_codex_events(prompt: str, thread_id: Optional[str] = None):
     except Exception as e:
 
         logger.exception("Error during streaming")
+
+        yield _sse({
+            "type": "error",
+            "message": str(e),
+        })
+
+
+# ---------------------------------------------------------
+# Streaming with execution tracking
+# ---------------------------------------------------------
+
+def stream_codex_events_with_tracking(
+    prompt: str, 
+    agent_name: str,
+    execution_id: str,
+    thread_id: Optional[str] = None
+):
+    """
+    Generator yielding SSE events from Codex `exec --json` with execution tracking.
+    Saves all logs to execution history.
+    """
+    from app.agent_executions.service import add_execution_log, complete_execution
+    from app.agent_executions.models import ExecutionLog
+
+    logger.info(f"Starting Codex event stream with tracking for execution {execution_id}")
+
+    os.makedirs(AGENT_CWD, exist_ok=True)
+
+    cli = CodexCLI(cwd=AGENT_CWD)
+
+    event_count = 0
+    assistant_final_response: str = ""
+    thinking_logs: list = []
+
+    try:
+
+        for stream, line in cli.run_streaming(prompt, yield_lines=True):
+
+            # returncode event
+            if stream == "returncode":
+                logger.info("Codex execution completed with code %s", line)
+                complete_execution(agent_name, execution_id, line)
+                
+                # Log completion
+                add_execution_log(
+                    agent_name,
+                    execution_id,
+                    ExecutionLog(
+                        timestamp=datetime.now().isoformat(),
+                        type="status",
+                        content=f"Execution completed with code {line}",
+                        details={"return_code": line}
+                    )
+                )
+                
+                yield _sse({"type": "returncode", "code": line})
+                break
+
+            event_count += 1
+
+            # -------------------------------------------------
+            # Parse Codex JSON events and track them
+            # -------------------------------------------------
+
+            if stream == "stdout":
+                event_data = _parse_codex_event(line)
+
+                if event_data:
+                    # assistant response
+                    text = _extract_assistant_message(event_data)
+                    if text:
+                        assistant_final_response = text
+                        add_execution_log(
+                            agent_name,
+                            execution_id,
+                            ExecutionLog(
+                                timestamp=datetime.now().isoformat(),
+                                type="message",
+                                content=text,
+                                details={"message_type": "assistant"}
+                            )
+                        )
+
+                    # thinking logs for command execution
+                    thinking = _extract_thinking(event_data)
+                    if thinking:
+                        thinking_logs.append(thinking)
+                        logger.info("[THINKING] %s", thinking)
+                        
+                        # Track command execution
+                        if thinking["type"] == "started":
+                            add_execution_log(
+                                agent_name,
+                                execution_id,
+                                ExecutionLog(
+                                    timestamp=datetime.now().isoformat(),
+                                    type="command_start",
+                                    content=thinking["command"],
+                                    details=thinking
+                                )
+                            )
+                        elif thinking["type"] == "completed":
+                            add_execution_log(
+                                agent_name,
+                                execution_id,
+                                ExecutionLog(
+                                    timestamp=datetime.now().isoformat(),
+                                    type="command_complete",
+                                    content=thinking["command"],
+                                    details=thinking
+                                )
+                            )
+
+            # forward event to SSE
+            yield _sse({"stream": stream, "line": line})
+
+        logger.info("Streaming completed. Total events: %s", event_count)
+
+        # -------------------------------------------------
+        # Save assistant response to thread if provided
+        # -------------------------------------------------
+
+        if thread_id and assistant_final_response:
+            _save_assistant_message(
+                thread_id,
+                assistant_final_response,
+                thinking_logs,
+            )
+
+    except Exception as e:
+
+        logger.exception("Error during streaming")
+        
+        # Mark execution as failed
+        complete_execution(agent_name, execution_id, -1)
+        add_execution_log(
+            agent_name,
+            execution_id,
+            ExecutionLog(
+                timestamp=datetime.now().isoformat(),
+                type="status",
+                content=f"Execution failed: {str(e)}",
+                details={"error": str(e)}
+            )
+        )
 
         yield _sse({
             "type": "error",
