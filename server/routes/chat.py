@@ -29,7 +29,10 @@ def chat_stream(request: ChatRequest):
         except Exception as e:
             logger.error(f"Error saving user message to thread: {str(e)}", exc_info=True)
     
-    prompt = AGENT_PROMPT.format(user_prompt = request.prompt)
+    prompt = AGENT_PROMPT.format(
+        user_prompt=request.prompt,
+        thread_id=request.thread_id
+    )
     
     logger.info("Starting streaming response...")
     

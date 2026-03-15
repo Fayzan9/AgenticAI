@@ -15,6 +15,8 @@ AGENT_CWD = Path(__file__).resolve().parent / "agents"
 AGENTS_DIR = AGENT_CWD / "created_agents"
 # Path to agent template directory
 AGENT_TEMPLATE_DIR = BASE_DIR / "agent_template"
+# Path to threads data directory
+THREADS_DIR = BASE_DIR / "data" / "threads"
 
 CORS_ORIGINS = ["*"]
 CORS_ALLOW_CREDENTIALS = True
@@ -23,7 +25,7 @@ CORS_ALLOW_HEADERS = ["*"]
 
 AGENT_PROMPT = """
 You are an agent that processess the users request using agents/workflow.md guidelines
-
+thread_id: {thread_id}
 User Request:
 {user_prompt}
 """

@@ -2,43 +2,109 @@
 
 ## Overview
 
-This workflow is the entry point for handling user requests.
+This workflow defines how the system processes a user request.
 The system decides whether to **respond directly** or **delegate the task to one or more agents**.
 
-Agents are stored in the `created_agents/` directory and can be extended by adding new folders.
+Agents are stored in the `created_agents/` directory.
+
+The workflow also supports loading conversation history using the provided function.
+
+---
+
+# Important Rule
+
+Conversation history **must only be accessed using the provided function**.
+
+```python
+from services.history_loader import load_history
+
+history = load_history(thread_id)
+```
+
+❌ **Do NOT read conversation files directly**.
+Always use `load_history(thread_id)`.
 
 ---
 
 # Workflow
 
-1. **Receive Request**
+## 1. Receive Request
 
-   The system receives a request from the user.
+The system receives:
 
-2. **Analyze Request**
+* `user_request`
+* `thread_id`
 
-   Determine:
+---
 
-   * The tasks required to fulfill the request
-   * Whether any tasks require specialized agents
-   * Whether the request contains **multiple tasks**
+## 2. Load Message History
 
-3. **Identify Relevant Agents**
+Load history using the provided function:
 
-   To determine which agents may help:
+```python
+from services.history_loader import load_history
 
-   * Read `description.md` from each agent folder.
-   * Use the description to identify which agent is relevant.
+history = load_history(thread_id)
+```
 
-   Do **not read `agent.md` or `output_format.md` yet**.
+History contains:
 
-4. **Decide Execution Method**
+```
+[
+  {"role": "...", "text": "...", "timestamp": "..."}
+]
+```
 
-   * **Direct Response**
-     If no agent is required, respond directly.
+Use this history for context.
 
-   * **Use Agent(s)**
-     If the task requires one or more agents, execute them as needed.
+---
+
+## 3. Analyze Request
+
+Determine:
+
+* The task required
+* Whether **multiple tasks** exist
+* Whether a **specialized agent** is required
+
+---
+
+## 4. Identify Relevant Agents
+
+Check agents inside:
+
+```
+created_agents/
+```
+
+For each agent:
+
+Read only:
+
+```
+description.md
+```
+
+⚠️ Do **not** read these files yet:
+
+```
+agent.md
+output_format.md
+```
+
+---
+
+## 5. Decide Execution Method
+
+### Direct Response
+
+If no agent is required → respond directly.
+
+---
+
+### Use Agent(s)
+
+If an agent is needed → execute the relevant agent.
 
 ---
 
@@ -46,37 +112,27 @@ Agents are stored in the `created_agents/` directory and can be extended by addi
 
 If multiple agents are required:
 
-1. Execute agents **in sequence**.
-2. The **output of one agent may be used as input for the next agent**.
-3. Continue until all tasks are completed.
+1. Execute agents **in sequence**
+2. Pass the **output of one agent to the next** if needed
 
-Examples:
+Example:
 
-* User asks for **multiple tasks**
-  Example:
-  *"Write an essay about AI and give a recipe for pasta."*
+User request:
 
-  Execution:
+```
+Write an essay and summarize it
+```
 
-  1. Use `essay_writer`
-  2. Use `recipe_agent`
+Execution:
 
-* One task **depends on the result of another**
-  Example:
-  *"Write an essay and summarize it."*
-
-  Execution:
-
-  1. `essay_writer`
-  2. `essay_summarizer` using the essay output
+1. `essay_writer`
+2. `essay_summarizer`
 
 ---
 
 # Loading an Agent
 
-Only when an agent is selected:
-
-Load the agent from:
+When an agent is selected, load files from:
 
 ```
 created_agents/<agent_name>/
@@ -84,44 +140,56 @@ created_agents/<agent_name>/
 
 Read:
 
-* `agent.md`
-* `output_format.md`
+```
+agent.md
+output_format.md
+```
 
 ---
 
 # Agent Registry
 
-List available agents and their purpose.
+| Agent        | Description       |
+| ------------ | ----------------- |
+| essay_writer | Writes essays     |
+| recipe_agent | Generates recipes |
 
-| Agent        | Description                   |
-| ------------ | ----------------------------- |
-| essay_writer | Writes essays on given topics |
-| recipe_agent | Generates recipes for dishes  |
+To add a new agent:
 
-To add a new agent, add a new row with the agent name and description.
+1. Create a new folder in `created_agents/`
+2. Add:
+
+```
+agent.md
+description.md
+output_format.md
+```
 
 ---
 
 # Response Rules
 
-* If no agent is needed → respond directly.
-* If an agent is used → follow that agent's instructions and output format.
-* If multiple agents are used → execute them sequentially and combine the outputs clearly.
+* If no agent is needed → respond directly
+* If an agent is used → follow the agent instructions and output format
+* If multiple agents are used → execute them sequentially and combine outputs
 
 ---
 
-# Folder Structure
+# Folder Structure that you can access
 
 ```
-.
-├── created_agents
-│   ├── essay_writer
-│   │   ├── agent.md
-│   │   ├── description.md
-│   │   └── output_format.md
-│   └── recipe_agent
-│       ├── agent.md
-│       ├── description.md
-│       └── output_format.md
-└── workflow.md
+server
+├── agents
+│   ├── created_agents
+│   │   ├── essay_writer
+│   │   │   ├── agent.md
+│   │   │   ├── description.md
+│   │   │   └── output_format.md
+│   │   └── recipe_agent
+│   │       ├── agent.md
+│   │       ├── description.md
+│   │       └── output_format.md
+│   └── workflow.md
+└── services
+    ├── history_loader.py
 ```

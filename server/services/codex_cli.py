@@ -23,6 +23,7 @@ class CodexCLI:
         self._codex_bin = codex_bin or shutil.which("codex") or "codex"
 
     def _build_args(self, prompt: Optional[str] = None) -> list[str]:
+        from config import THREADS_DIR
         args = [self._codex_bin, "exec"]
         if self.json_events:
             args.append("--json")
@@ -35,6 +36,8 @@ class CodexCLI:
         if self.full_auto:
             args.append("--full-auto")
         args.extend(["-C", str(self.cwd)])
+        # Always allow access to the threads directory
+        args.extend(["--add-dir", str(THREADS_DIR.resolve())])
         if prompt is not None and prompt:
             args.append(prompt)
         return args
