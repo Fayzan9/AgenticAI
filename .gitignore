@@ -4,3 +4,8 @@ server/.venv
 *.pyc
 backend/data
 backend/workflow_templates/agent_executions
+
+# Environment variables (contains secrets)
+.env
+backend/.env
+frontend/.env

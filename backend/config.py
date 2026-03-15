@@ -1,7 +1,12 @@
 """
 config.py: Centralized configuration for FastAPI app
 """
+import os
 from pathlib import Path
+from dotenv import load_dotenv
+
+# Load environment variables from .env file
+load_dotenv()
 
 # Path to UI (server is in agent/server/, UI is in agent/ui/)
 
@@ -20,6 +25,9 @@ CORS_ORIGINS = ["*"]
 CORS_ALLOW_CREDENTIALS = True
 CORS_ALLOW_METHODS = ["*"]
 CORS_ALLOW_HEADERS = ["*"]
+
+# Container execution settings
+ENABLE_CONTAINER_EXECUTION = os.getenv("ENABLE_CONTAINER_EXECUTION", "false").lower() == "true"
 
 AGENT_PROMPT = """
 Hi, you are an Agentic AI that processes the users request.
