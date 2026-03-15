@@ -1,27 +1,33 @@
 "use client";
 
-import { PlusIcon, SettingsIcon, BotIcon } from "./icons";
+import { PlusIcon, SettingsIcon, BotIcon, TrashIcon } from "./icons";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { useEffect, useState } from "react";
-import { getThreads, Thread } from "@/lib/api";
+import { getThreads, deleteThread, Thread } from "@/lib/api";
 
 interface SidebarProps {
   collapsed: boolean;
   onNewChat?: () => void;
   onThreadClick?: (threadId: string) => void;
   currentThreadId?: string | null;
-  refreshTrigger?: number; // Add a trigger to force refresh
+  refreshTrigger?: number;
 }
 
-export function Sidebar({ collapsed, onNewChat, onThreadClick, currentThreadId, refreshTrigger }: SidebarProps) {
+export function Sidebar({
+  collapsed,
+  onNewChat,
+  onThreadClick,
+  currentThreadId,
+  refreshTrigger,
+}: SidebarProps) {
   const pathname = usePathname();
   const [threads, setThreads] = useState<Thread[]>([]);
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
     loadThreads();
-  }, [refreshTrigger]); // Reload when refreshTrigger changes
+  }, [refreshTrigger]);
 
   const loadThreads = async () => {
     try {
@@ -47,6 +53,25 @@ export function Sidebar({ collapsed, onNewChat, onThreadClick, currentThreadId, 
     }
   };
 
+  const handleDeleteThread = async (
+    e: React.MouseEvent,
+    threadId: string
+  ) => {
+    e.stopPropagation();
+
+    const confirmed = confirm("Delete this conversation?");
+    if (!confirmed) return;
+
+    try {
+      await deleteThread(threadId);
+
+      // optimistic update
+      setThreads((prev) => prev.filter((t) => t.id !== threadId));
+    } catch (error) {
+      console.error("Failed to delete thread:", error);
+    }
+  };
+
   const formatDate = (dateString: string) => {
     const date = new Date(dateString);
     const now = new Date();
@@ -65,7 +90,9 @@ export function Sidebar({ collapsed, onNewChat, onThreadClick, currentThreadId, 
       style={{ width: collapsed ? 0 : "18rem" }}
       data-purpose="navigation-sidebar"
     >
-      <div className={`${collapsed ? "opacity-0 pointer-events-none" : ""} w-72 flex flex-col h-full min-w-0`}>
+      <div
+        className={`${collapsed ? "opacity-0 pointer-events-none" : ""} w-72 flex flex-col h-full min-w-0`}
+      >
         <div className="p-4">
           <button
             type="button"
@@ -76,48 +103,74 @@ export function Sidebar({ collapsed, onNewChat, onThreadClick, currentThreadId, 
             <span>New Chat</span>
           </button>
         </div>
+
         <div className="flex-1 overflow-y-auto px-3 space-y-1" data-purpose="recent-chats">
           <p className="px-3 py-2 text-[10px] font-semibold text-gray-400 uppercase tracking-widest">
             Recent Chats
           </p>
+
           {loading ? (
-            <div className="px-3 py-4 text-xs text-gray-400 text-center">Loading threads...</div>
+            <div className="px-3 py-4 text-xs text-gray-400 text-center">
+              Loading threads...
+            </div>
           ) : threads.length === 0 ? (
-            <div className="px-3 py-4 text-xs text-gray-400 text-center">No conversations yet</div>
+            <div className="px-3 py-4 text-xs text-gray-400 text-center">
+              No conversations yet
+            </div>
           ) : (
             threads.map((thread) => (
-              <button
+              <div
                 key={thread.id}
-                type="button"
-                onClick={() => handleThreadClick(thread.id)}
-                className={`w-full flex flex-col text-left px-3 py-3 rounded-lg transition-all group ${
+                className={`w-full flex items-center justify-between px-3 py-3 rounded-lg transition-all group ${
                   currentThreadId === thread.id
                     ? "bg-white border border-gray-200 shadow-sm"
                     : "hover:bg-gray-100"
                 }`}
               >
-                <span
-                  className={`text-sm font-medium truncate ${
-                    currentThreadId === thread.id ? "text-gray-800" : "text-gray-700"
-                  }`}
+                <button
+                  type="button"
+                  onClick={() => handleThreadClick(thread.id)}
+                  className="flex flex-col text-left flex-1"
                 >
-                  {thread.title}
-                </span>
-                <span className="text-xs text-gray-400 truncate">{formatDate(thread.updated_at)}</span>
-              </button>
+                  <span
+                    className={`text-sm font-medium truncate ${
+                      currentThreadId === thread.id
+                        ? "text-gray-800"
+                        : "text-gray-700"
+                    }`}
+                  >
+                    {thread.title}
+                  </span>
+
+                  <span className="text-xs text-gray-400 truncate">
+                    {formatDate(thread.updated_at)}
+                  </span>
+                </button>
+
+                <button
+                  onClick={(e) => handleDeleteThread(e, thread.id)}
+                  className="opacity-0 group-hover:opacity-100 p-1 rounded hover:bg-red-50 transition"
+                >
+                  <TrashIcon className="w-4 h-4 text-gray-400 hover:text-red-500" />
+                </button>
+              </div>
             ))
           )}
         </div>
+
         <div className="p-4 border-t border-gray-100 space-y-1" data-purpose="quick-actions">
           <Link
             href="/agents"
             className={`w-full flex items-center gap-3 px-3 py-2 text-sm rounded-lg transition-colors ${
-              pathname === "/agents" ? "bg-gray-200 text-gray-900" : "text-gray-600 hover:bg-gray-200"
+              pathname === "/agents"
+                ? "bg-gray-200 text-gray-900"
+                : "text-gray-600 hover:bg-gray-200"
             }`}
           >
             <BotIcon className="w-5 h-5 text-gray-400" />
             <span>Agents</span>
           </Link>
+
           <button
             type="button"
             className="w-full flex items-center gap-3 px-3 py-2 text-sm text-gray-600 rounded-lg hover:bg-gray-200 transition-colors"
@@ -125,6 +178,7 @@ export function Sidebar({ collapsed, onNewChat, onThreadClick, currentThreadId, 
             <SettingsIcon className="w-5 h-5 text-gray-400" />
             <span>Settings</span>
           </button>
+
           <button
             type="button"
             className="w-full flex items-center justify-between px-3 py-2 text-sm text-gray-600 rounded-lg hover:bg-gray-200 transition-colors"

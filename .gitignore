@@ -2,3 +2,4 @@ ui/.next
 ui/node_modules
 server/.venv
 *.pyc
+backend/data
