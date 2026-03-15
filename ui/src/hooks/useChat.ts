@@ -1,6 +1,7 @@
 "use client";
 
-import { useCallback, useState } from "react";
+import { useCallback, useState, useEffect } from "react";
+import { createThread, getThread, Thread } from "@/lib/api";
 
 export type Message = { role: "user"; text: string } | { role: "assistant"; text: string };
 
@@ -13,15 +14,59 @@ export interface ThoughtState {
 export function useChat() {
   const [messages, setMessages] = useState<Message[]>([]);
   const [streaming, setStreaming] = useState(false);
+  const [currentThreadId, setCurrentThreadId] = useState<string | null>(null);
+  const [currentThreadTitle, setCurrentThreadTitle] = useState<string>("New Chat");
+  const [threadUpdateTrigger, setThreadUpdateTrigger] = useState(0);
   const [thought, setThought] = useState<ThoughtState>({
     visible: false,
     subtitle: "Running Codex",
     steps: [],
   });
 
+  const createNewThread = useCallback(async () => {
+    try {
+      console.log("Creating new thread...");
+      const thread = await createThread();
+      console.log("Thread created:", thread.id);
+      setCurrentThreadId(thread.id);
+      setCurrentThreadTitle(thread.title);
+      setMessages([]);
+      setThreadUpdateTrigger(prev => prev + 1);
+      return thread;
+    } catch (error) {
+      console.error("Failed to create thread:", error);
+      return null;
+    }
+  }, []);
+
+  const loadThread = useCallback(async (threadId: string) => {
+    try {
+      console.log("Loading thread:", threadId);
+      const thread = await getThread(threadId);
+      console.log("Thread loaded:", thread.title, "messages:", thread.messages.length);
+      setCurrentThreadId(thread.id);
+      setCurrentThreadTitle(thread.title);
+      setThreadUpdateTrigger(prev => prev + 1);
+      setMessages(thread.messages.map(m => ({ role: m.role, text: m.text } as Message)));
+      return thread;
+    } catch (error) {
+      console.error("Failed to load thread:", error);
+      return null;
+    }
+  }, []);
+
   const sendPrompt = useCallback(async (prompt: string) => {
     const trimmed = prompt.trim();
     if (!trimmed || streaming) return;
+
+    // Create thread if doesn't exist
+    let threadId = currentThreadId;
+    if (!threadId) {
+      const thread = await createNewThread();
+      if (thread) {
+        threadId = thread.id;
+      }
+    }
 
     setStreaming(true);
     setMessages((prev) => [...prev, { role: "user", text: trimmed }]);
@@ -30,11 +75,13 @@ export function useChat() {
     let currentAssistantText = "";
 
     try {
+      console.log("Sending message to thread:", threadId);
       const res = await fetch("/api/chat", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ prompt: trimmed }),
+        body: JSON.stringify({ prompt: trimmed, thread_id: threadId }),
       });
+      console.log("Chat request sent, response status:", res.status);
       if (!res.ok) throw new Error(res.statusText);
 
       const reader = res.body!.getReader();
@@ -84,6 +131,17 @@ export function useChat() {
       if (currentAssistantText) {
         setMessages((prev) => [...prev, { role: "assistant", text: currentAssistantText }]);
       }
+
+      // Reload thread to get updated title
+      if (threadId) {
+        console.log("Reloading thread after message completion:", threadId);
+        const thread = await getThread(threadId);
+        if (thread) {
+          console.log("Thread title updated:", thread.title);
+          setThreadUpdateTrigger(prev => prev + 1);
+          setCurrentThreadTitle(thread.title);
+        }
+      }
     } catch (e) {
       setMessages((prev) => [
         ...prev,
@@ -93,7 +151,17 @@ export function useChat() {
       setThought((t) => ({ ...t, visible: false }));
       setStreaming(false);
     }
-  }, [streaming]);
+  }, [streaming, currentThreadId, createNewThread]);
 
-  return { messages, streaming, thought, sendPrompt };
+  return { 
+    messages, 
+    streaming, 
+    thought, 
+    sendPrompt, 
+    currentThreadId, 
+    threadUpdateTrigger,
+    currentThreadTitle,
+    createNewThread, 
+    loadThread 
+  };
 }

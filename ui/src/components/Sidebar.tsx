@@ -3,20 +3,62 @@
 import { PlusIcon, SettingsIcon, BotIcon } from "./icons";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
-
-const RECENT_CHATS = [
-  { title: "Project Brainstorming", preview: "How should we approach..." },
-  { title: "Technical Roadmap", preview: "Discussing the architecture..." },
-  { title: "Code Review Refactor", preview: "Optimizing the main loop..." },
-];
+import { useEffect, useState } from "react";
+import { getThreads, Thread } from "@/lib/api";
 
 interface SidebarProps {
   collapsed: boolean;
   onNewChat?: () => void;
+  onThreadClick?: (threadId: string) => void;
+  currentThreadId?: string | null;
+  refreshTrigger?: number; // Add a trigger to force refresh
 }
 
-export function Sidebar({ collapsed, onNewChat }: SidebarProps) {
+export function Sidebar({ collapsed, onNewChat, onThreadClick, currentThreadId, refreshTrigger }: SidebarProps) {
   const pathname = usePathname();
+  const [threads, setThreads] = useState<Thread[]>([]);
+  const [loading, setLoading] = useState(true);
+
+  useEffect(() => {
+    loadThreads();
+  }, [refreshTrigger]); // Reload when refreshTrigger changes
+
+  const loadThreads = async () => {
+    try {
+      setLoading(true);
+      const fetchedThreads = await getThreads();
+      setThreads(fetchedThreads);
+    } catch (error) {
+      console.error("Failed to load threads:", error);
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const handleNewChat = async () => {
+    if (onNewChat) {
+      await onNewChat();
+    }
+  };
+
+  const handleThreadClick = (threadId: string) => {
+    if (onThreadClick) {
+      onThreadClick(threadId);
+    }
+  };
+
+  const formatDate = (dateString: string) => {
+    const date = new Date(dateString);
+    const now = new Date();
+    const diff = now.getTime() - date.getTime();
+    const days = Math.floor(diff / (1000 * 60 * 60 * 24));
+
+    if (days === 0) return "Today";
+    if (days === 1) return "Yesterday";
+    if (days < 7) return `${days} days ago`;
+    return date.toLocaleDateString();
+  };
+
   return (
     <aside
       className="sidebar-transition h-full bg-gray-50 border-r border-gray-100 flex flex-col shrink-0 overflow-hidden"
@@ -27,7 +69,7 @@ export function Sidebar({ collapsed, onNewChat }: SidebarProps) {
         <div className="p-4">
           <button
             type="button"
-            onClick={onNewChat}
+            onClick={handleNewChat}
             className="w-full flex items-center justify-center gap-2 px-4 py-3 bg-white border border-gray-200 rounded-xl text-sm font-medium text-gray-700 hover:bg-gray-100 transition-colors shadow-sm"
           >
             <PlusIcon className="w-4 h-4" />
@@ -38,20 +80,33 @@ export function Sidebar({ collapsed, onNewChat }: SidebarProps) {
           <p className="px-3 py-2 text-[10px] font-semibold text-gray-400 uppercase tracking-widest">
             Recent Chats
           </p>
-          {RECENT_CHATS.map((chat, i) => (
-            <button
-              key={chat.title}
-              type="button"
-              className={`w-full flex flex-col text-left px-3 py-3 rounded-lg transition-all group ${
-                i === 0 ? "bg-white border border-gray-200 shadow-sm" : "hover:bg-gray-100"
-              }`}
-            >
-              <span className={`text-sm font-medium truncate ${i === 0 ? "text-gray-800" : "text-gray-700"}`}>
-                {chat.title}
-              </span>
-              <span className="text-xs text-gray-400 truncate">{chat.preview}</span>
-            </button>
-          ))}
+          {loading ? (
+            <div className="px-3 py-4 text-xs text-gray-400 text-center">Loading threads...</div>
+          ) : threads.length === 0 ? (
+            <div className="px-3 py-4 text-xs text-gray-400 text-center">No conversations yet</div>
+          ) : (
+            threads.map((thread) => (
+              <button
+                key={thread.id}
+                type="button"
+                onClick={() => handleThreadClick(thread.id)}
+                className={`w-full flex flex-col text-left px-3 py-3 rounded-lg transition-all group ${
+                  currentThreadId === thread.id
+                    ? "bg-white border border-gray-200 shadow-sm"
+                    : "hover:bg-gray-100"
+                }`}
+              >
+                <span
+                  className={`text-sm font-medium truncate ${
+                    currentThreadId === thread.id ? "text-gray-800" : "text-gray-700"
+                  }`}
+                >
+                  {thread.title}
+                </span>
+                <span className="text-xs text-gray-400 truncate">{formatDate(thread.updated_at)}</span>
+              </button>
+            ))
+          )}
         </div>
         <div className="p-4 border-t border-gray-100 space-y-1" data-purpose="quick-actions">
           <Link

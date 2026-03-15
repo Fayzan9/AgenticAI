@@ -1,15 +1,20 @@
 "use client";
 
-import { useState } from "react";
-import { Sidebar } from "@/components/Sidebar";
 import { ChatArea } from "@/components/ChatArea";
-import { useChat } from "@/hooks/useChat";
+import { useThreadContext } from "@/hooks/useThreadContext";
 
 export default function Home() {
-  const { messages, streaming, thought, sendPrompt } = useChat();
+  const { 
+    messages, 
+    streaming, 
+    thought, 
+    sendPrompt, 
+    currentThreadTitle
+  } = useThreadContext();
 
   return (
     <ChatArea
+      chatTitle={currentThreadTitle}
       messages={messages}
       thought={thought}
       streaming={streaming}

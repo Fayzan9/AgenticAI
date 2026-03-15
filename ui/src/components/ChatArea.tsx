@@ -34,7 +34,7 @@ export function ChatArea({
   }, [messages, thought.visible]);
 
   return (
-    <main className="flex-1 flex flex-col relative bg-white min-w-0" data-purpose="chat-interface">
+    <main className="flex-1 flex flex-col relative bg-white min-w-0 h-full" data-purpose="chat-interface">
       <header className="h-16 flex items-center justify-between px-6 border-b border-gray-50 shrink-0">
         <div className="flex items-center gap-3">
           <button
@@ -57,7 +57,7 @@ export function ChatArea({
 
       <section
         ref={scrollRef}
-        className="flex-1 overflow-y-auto p-6 md:p-12 space-y-8 max-w-4xl mx-auto w-full"
+        className="flex-1 overflow-y-auto p-6 md:p-12 space-y-8 max-w-4xl mx-auto w-full pb-32"
         data-purpose="chat-messages"
       >
         {messages.length === 0 && <WelcomeMessage />}
@@ -71,7 +71,9 @@ export function ChatArea({
         <ThoughtBlock visible={thought.visible} subtitle={thought.subtitle} steps={thought.steps} />
       </section>
 
-      <ChatInput onSend={onSendPrompt} disabled={streaming} />
+      <div className="absolute bottom-0 left-0 right-0 bg-white">
+        <ChatInput onSend={onSendPrompt} disabled={streaming} />
+      </div>
     </main>
   );
 }
