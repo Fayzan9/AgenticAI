@@ -9,6 +9,10 @@ const nextConfig: NextConfig = {
         source: "/api/threads/:path*",
         destination: `${API_BASE}/api/threads/:path*`,
       },
+      {
+        source: "/api/settings/:path*",
+        destination: `${API_BASE}/api/settings/:path*`,
+      },
     ];
   },
 };

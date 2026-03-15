@@ -183,13 +183,17 @@ export function Sidebar({
             <span>Executions</span>
           </Link>
 
-          <button
-            type="button"
-            className="w-full flex items-center gap-3 px-3 py-2 text-sm text-gray-600 rounded-lg hover:bg-gray-200 transition-colors"
+          <Link
+            href="/settings"
+            className={`w-full flex items-center gap-3 px-3 py-2 text-sm rounded-lg transition-colors ${
+              pathname === "/settings"
+                ? "bg-gray-200 text-gray-900"
+                : "text-gray-600 hover:bg-gray-200"
+            }`}
           >
             <SettingsIcon className="w-5 h-5 text-gray-400" />
             <span>Settings</span>
-          </button>
+          </Link>
 
           <button
             type="button"

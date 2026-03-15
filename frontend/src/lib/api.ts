@@ -107,3 +107,68 @@ export async function deleteThread(threadId: string): Promise<void> {
     throw new Error(`Failed to delete thread: ${response.statusText}`);
   }
 }
+
+/**
+ * Settings API
+ */
+
+export interface ConfigValue {
+  [key: string]: any;
+}
+
+export interface WorkflowFile {
+  name: string;
+  content: string;
+}
+
+export async function getConfig(): Promise<ConfigValue> {
+  const response = await fetch("/api/settings/config");
+  
+  if (!response.ok) {
+    throw new Error(`Failed to fetch config: ${response.statusText}`);
+  }
+  
+  const data = await response.json();
+  return data.configs;
+}
+
+export async function updateConfig(key: string, value: any): Promise<boolean> {
+  const response = await fetch("/api/settings/config/update", {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify({ key, value }),
+  });
+  
+  if (!response.ok) {
+    throw new Error(`Failed to update config: ${response.statusText}`);
+  }
+  
+  const data = await response.json();
+  return data.success;
+}
+
+export async function getWorkflowFiles(): Promise<WorkflowFile[]> {
+  const response = await fetch("/api/settings/workflow");
+  
+  if (!response.ok) {
+    throw new Error(`Failed to fetch workflow files: ${response.statusText}`);
+  }
+  
+  const data = await response.json();
+  return data.files;
+}
+
+export async function updateWorkflowFile(filename: string, content: string): Promise<boolean> {
+  const response = await fetch("/api/settings/workflow/update", {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify({ filename, content }),
+  });
+  
+  if (!response.ok) {
+    throw new Error(`Failed to update workflow file: ${response.statusText}`);
+  }
+  
+  const data = await response.json();
+  return data.success;
+}

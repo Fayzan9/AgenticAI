@@ -7,3 +7,11 @@ class GetSettingsRequest(SettingsBaseModel):
 class UpdateSettingsRequest(SettingsBaseModel):
 	section: str
 	values: Dict[str, Any]
+
+class UpdateConfigRequest(SettingsBaseModel):
+	key: str
+	value: Any
+
+class UpdateWorkflowFileRequest(SettingsBaseModel):
+	filename: str
+	content: str
