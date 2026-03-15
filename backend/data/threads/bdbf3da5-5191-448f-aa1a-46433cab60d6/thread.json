@@ -1,0 +1,84 @@
+{
+  "id": "bdbf3da5-5191-448f-aa1a-46433cab60d6",
+  "title": "New Chat",
+  "created_at": "2026-03-15T21:08:11.876993",
+  "updated_at": "2026-03-15T21:08:38.170775",
+  "messages": [
+    {
+      "role": "user",
+      "text": "Hi",
+      "thinking_logs": [],
+      "timestamp": "2026-03-15T21:08:11.913369"
+    },
+    {
+      "role": "assistant",
+      "text": "Hi! How can I help you today?",
+      "thinking_logs": [
+        {
+          "type": "started",
+          "command": "/bin/zsh -lc 'rg --files'"
+        },
+        {
+          "type": "completed",
+          "command": "/bin/zsh -lc 'rg --files'",
+          "output": "agent_format/description.md agent_format/output_format.md agent_format/agent.md workflow.md agent_created/TestAgent/inpu"
+        },
+        {
+          "type": "started",
+          "command": "/bin/zsh -lc \"rg -n \\\"workflow\\\\.md|AGENTS\\\\.md|thread|process\\\" -S .\""
+        },
+        {
+          "type": "completed",
+          "command": "/bin/zsh -lc \"rg -n \\\"workflow\\\\.md|AGENTS\\\\.md|thread|process\\\" -S .\"",
+          "output": "./workflow.md:5:This workflow defines how the system processes a user request. ./workflow.md:21:history = load_history(t"
+        },
+        {
+          "type": "started",
+          "command": "/bin/zsh -lc \"sed -n '1,260p' workflow.md\""
+        },
+        {
+          "type": "completed",
+          "command": "/bin/zsh -lc \"sed -n '1,260p' workflow.md\"",
+          "output": "# Agentic AI Workflow  ## Overview  This workflow defines how the system processes a user request. The system decides wh"
+        },
+        {
+          "type": "started",
+          "command": "/bin/zsh -lc 'rg -n \"def load_history|history_loader\" -S /Users/faizanpersonal/Desktop/Personal/Experimenting/agent/backend'"
+        },
+        {
+          "type": "started",
+          "command": "/bin/zsh -lc 'find /Users/faizanpersonal/Desktop/Personal/Experimenting/agent/backend -maxdepth 4 -type d -name agents -o -name services'"
+        },
+        {
+          "type": "completed",
+          "command": "/bin/zsh -lc 'rg -n \"def load_history|history_loader\" -S /Users/faizanpersonal/Desktop/Personal/Experimenting/agent/backend'",
+          "output": "/Users/faizanpersonal/Desktop/Personal/Experimenting/agent/backend/services/history_loader.py:6:def load_history(thread_"
+        },
+        {
+          "type": "completed",
+          "command": "/bin/zsh -lc 'find /Users/faizanpersonal/Desktop/Personal/Experimenting/agent/backend -maxdepth 4 -type d -name agents -o -name services'",
+          "output": "/Users/faizanpersonal/Desktop/Personal/Experimenting/agent/backend/services"
+        },
+        {
+          "type": "started",
+          "command": "/bin/zsh -lc \"sed -n '1,220p' /Users/faizanpersonal/Desktop/Personal/Experimenting/agent/backend/services/history_loader.py\""
+        },
+        {
+          "type": "completed",
+          "command": "/bin/zsh -lc \"sed -n '1,220p' /Users/faizanpersonal/Desktop/Personal/Experimenting/agent/backend/services/history_loader.py\"",
+          "output": "import os import json  THREADS_DIR = os.path.join(os.path.dirname(__file__), '../data/threads')  def load_history(thread"
+        },
+        {
+          "type": "started",
+          "command": "/bin/zsh -lc \"python - <<'PY'\nimport json,sys\nsys.path.append('/Users/faizanpersonal/Desktop/Personal/Experimenting/agent/backend')\nfrom services.history_loader import load_history\nthread_id='bdbf3da5-5191-448f-aa1a-46433cab60d6'\nprint(json.dumps(load_history(thread_id), ensure_ascii=False))\nPY\""
+        },
+        {
+          "type": "completed",
+          "command": "/bin/zsh -lc \"python - <<'PY'\nimport json,sys\nsys.path.append('/Users/faizanpersonal/Desktop/Personal/Experimenting/agent/backend')\nfrom services.history_loader import load_history\nthread_id='bdbf3da5-5191-448f-aa1a-46433cab60d6'\nprint(json.dumps(load_history(thread_id), ensure_ascii=False))\nPY\"",
+          "output": "[]"
+        }
+      ],
+      "timestamp": "2026-03-15T21:08:38.170759"
+    }
+  ]
+}

@@ -17,7 +17,7 @@ interface ChatAreaProps {
   thought: ThoughtState;
   streaming: boolean;
   onSendPrompt: (text: string) => void;
-  onUpload?: (files: FileList) => void;
+  onUpload?: (files: File[]) => void;
 }
 
 export function ChatArea({

@@ -1,10 +1,13 @@
-from fastapi import APIRouter
-from app.uploads.upload import save_upload
-from app.uploads.models.request import UploadFileRequest
+from fastapi import APIRouter, UploadFile, File, Form
+from typing import List
+from app.uploads.upload import save_uploads
 from app.uploads.models.response import UploadFileResponse
 
 router = APIRouter()
 
 @router.post("/uploads", response_model=UploadFileResponse)
-def api_upload_file(request: UploadFileRequest):
-	return save_upload(request.filename, request.content)
+async def api_upload_files(
+    thread_id: str = Form(...),
+    files: List[UploadFile] = File(...)
+):
+    return await save_uploads(thread_id, files)
