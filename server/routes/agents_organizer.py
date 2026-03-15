@@ -4,7 +4,7 @@ routes/agents_organizer.py: API routes for agent management (create, rename, del
 import shutil
 from fastapi import APIRouter
 from pydantic import BaseModel
-from config import AGENTS_DIR
+from config import AGENTS_DIR, AGENT_TEMPLATE_DIR
 
 router = APIRouter()
 
@@ -24,13 +24,10 @@ def create_agent(request: dict):
     if not name:
         return {"error": "Name is required"}
     
-    template_dir = AGENTS_DIR.parent / "agent_template"
     new_agent_dir = AGENTS_DIR / name
-    
     if new_agent_dir.exists():
         return {"error": "Agent already exists"}
-    
-    shutil.copytree(template_dir, new_agent_dir)
+    shutil.copytree(AGENT_TEMPLATE_DIR, new_agent_dir)
     return {"status": "ok", "name": name}
 
 

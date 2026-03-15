@@ -57,7 +57,7 @@ export function ChatArea({
 
       <section
         ref={scrollRef}
-        className="flex-1 overflow-y-auto p-6 md:p-12 space-y-8 max-w-4xl mx-auto w-full pb-32"
+        className="flex-1 overflow-y-auto p-6 md:p-12 space-y-8 max-w-4xl mx-auto w-full pb-28 md:pb-36"
         data-purpose="chat-messages"
       >
         {messages.length === 0 && <WelcomeMessage />}
@@ -65,13 +65,13 @@ export function ChatArea({
           msg.role === "user" ? (
             <UserMessage key={i} text={msg.text} />
           ) : (
-            <AssistantMessage key={i} text={msg.text} />
+            <AssistantMessage key={i} text={msg.text} thinkingLogs={msg.thinkingLogs} />
           )
         )}
         <ThoughtBlock visible={thought.visible} subtitle={thought.subtitle} steps={thought.steps} />
       </section>
 
-      <div className="absolute bottom-0 left-0 right-0 bg-white">
+      <div className="sticky bottom-0 left-0 right-0 bg-white z-10 border-t border-gray-100">
         <ChatInput onSend={onSendPrompt} disabled={streaming} />
       </div>
     </main>

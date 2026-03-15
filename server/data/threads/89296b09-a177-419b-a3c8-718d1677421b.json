@@ -1,0 +1,20 @@
+{
+  "id": "89296b09-a177-419b-a3c8-718d1677421b",
+  "title": "Hi",
+  "created_at": "2026-03-15T15:13:45.022775",
+  "updated_at": "2026-03-15T15:13:54.593110",
+  "messages": [
+    {
+      "role": "user",
+      "text": "Hi",
+      "thinking_logs": [],
+      "timestamp": "2026-03-15T15:13:45.243684"
+    },
+    {
+      "role": "assistant",
+      "text": "Hi. How can I help you today?",
+      "thinking_logs": [],
+      "timestamp": "2026-03-15T15:13:54.593104"
+    }
+  ]
+}

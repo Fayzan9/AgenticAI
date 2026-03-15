@@ -7,10 +7,14 @@ from pydantic import BaseModel, Field
 import uuid
 
 
+
+from typing import Dict, Any
+
 class Message(BaseModel):
     """Represents a single message in a thread"""
     role: str  # "user" or "assistant"
     text: str
+    thinking_logs: List[Dict[str, Any]] = Field(default_factory=list)  # structured logs
     timestamp: datetime = Field(default_factory=datetime.now)
 
 
@@ -22,9 +26,9 @@ class Thread(BaseModel):
     updated_at: datetime = Field(default_factory=datetime.now)
     messages: List[Message] = Field(default_factory=list)
 
-    def add_message(self, role: str, text: str) -> Message:
+    def add_message(self, role: str, text: str, thinking_logs: Optional[List[str]] = None) -> Message:
         """Add a message to the thread and update timestamp"""
-        message = Message(role=role, text=text)
+        message = Message(role=role, text=text, thinking_logs=thinking_logs or [])
         self.messages.append(message)
         self.updated_at = datetime.now()
         return message
@@ -54,3 +58,4 @@ class MessageAddRequest(BaseModel):
     """Request to add a message to a thread"""
     role: str
     text: str
+    thinking_logs: Optional[List[str]] = None

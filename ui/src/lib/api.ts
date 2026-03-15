@@ -5,6 +5,7 @@
 export interface Message {
   role: string;
   text: string;
+  thinking_logs?: string[];
   timestamp: string;
 }
 

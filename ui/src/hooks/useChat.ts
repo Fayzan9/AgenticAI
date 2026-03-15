@@ -1,14 +1,16 @@
 "use client";
 
 import { useCallback, useState, useEffect } from "react";
-import { createThread, getThread, Thread } from "@/lib/api";
+import { createThread, getThread } from "@/lib/api";
 
-export type Message = { role: "user"; text: string } | { role: "assistant"; text: string };
+export type Message =
+  | { role: "user"; text: string }
+  | { role: "assistant"; text: string; thinkingLogs?: any[] };
 
 export interface ThoughtState {
   visible: boolean;
   subtitle: string;
-  steps: string[];
+  steps: any[];
 }
 
 export function useChat() {
@@ -47,7 +49,13 @@ export function useChat() {
       setCurrentThreadId(thread.id);
       setCurrentThreadTitle(thread.title);
       setThreadUpdateTrigger(prev => prev + 1);
-      setMessages(thread.messages.map(m => ({ role: m.role, text: m.text } as Message)));
+      setMessages(
+        thread.messages.map((m) =>
+          m.role === "assistant"
+            ? ({ role: "assistant", text: m.text, thinkingLogs: m.thinking_logs ?? [] } as Message)
+            : ({ role: "user", text: m.text } as Message)
+        )
+      );
       return thread;
     } catch (error) {
       console.error("Failed to load thread:", error);
@@ -70,9 +78,13 @@ export function useChat() {
 
     setStreaming(true);
     setMessages((prev) => [...prev, { role: "user", text: trimmed }]);
-    setThought({ visible: true, subtitle: "Running Codex", steps: [] });
+    // Hide the ThoughtBlock before starting a new process
+    setThought({ visible: false, subtitle: "Running Codex", steps: [] });
+    // Show it again as soon as streaming starts
+    setTimeout(() => setThought({ visible: true, subtitle: "Running Codex", steps: [] }), 0);
 
     let currentAssistantText = "";
+    let currentThoughtSteps: any[] = [];
 
     try {
       console.log("Sending message to thread:", threadId);
@@ -105,21 +117,26 @@ export function useChat() {
             if (event.type === "item.completed" && event.item) {
               const it = event.item;
               if (it.type === "agent_message" && it.text) {
-                currentAssistantText = (currentAssistantText ? currentAssistantText + "\n\n" : "") + it.text;
+                // Keep only the latest assistant message as the final answer.
+                currentAssistantText = it.text;
               }
             } else if (event.type === "item.completed" && event.item?.type === "command_execution") {
               const cmd = event.item.command ?? "";
               const out = (event.item.aggregated_output ?? "").slice(0, 80);
+              const logObj = { type: "completed", command: cmd, output: out };
+              currentThoughtSteps = [...currentThoughtSteps, logObj];
               setThought((t) => ({
                 ...t,
-                steps: [...t.steps, "Ran: " + cmd + (out ? " → " + out : "")],
+                steps: [...t.steps, logObj],
               }));
             } else if (event.type === "item.started" && event.item?.type === "command_execution") {
-              const cmd = (event.item.command ?? "").replace(/^\/bin\/\w+ -lc '|'$/g, "").slice(0, 50);
+              const cmd = (event.item.command ?? "").replace(/^\/bin\/\w+ -lc '\|'$/g, "").slice(0, 50);
+              const logObj = { type: "started", command: event.item?.command ?? "" };
+              currentThoughtSteps = [...currentThoughtSteps, logObj];
               setThought((t) => ({
                 ...t,
                 subtitle: "Running: " + cmd,
-                steps: [...t.steps, "Running: " + (event.item?.command ?? "").slice(0, 60)],
+                steps: [...t.steps, logObj],
               }));
             }
           } catch {
@@ -129,7 +146,10 @@ export function useChat() {
       }
 
       if (currentAssistantText) {
-        setMessages((prev) => [...prev, { role: "assistant", text: currentAssistantText }]);
+        setMessages((prev) => [
+          ...prev,
+          { role: "assistant", text: currentAssistantText, thinkingLogs: currentThoughtSteps },
+        ]);
       }
 
       // Reload thread to get updated title
@@ -148,7 +168,8 @@ export function useChat() {
         { role: "assistant", text: "Error: " + (e instanceof Error ? e.message : String(e)) },
       ]);
     } finally {
-      setThought((t) => ({ ...t, visible: false }));
+      // Hide the global ThoughtBlock after response; trace is already shown in the assistant message
+      setThought({ visible: false, subtitle: "Running Codex", steps: [] });
       setStreaming(false);
     }
   }, [streaming, currentThreadId, createNewThread]);

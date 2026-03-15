@@ -107,7 +107,7 @@ class ThreadStorage:
         logger.info(f"Created new thread {thread.id} with title: {title}")
         return thread
     
-    def add_message_to_thread(self, thread_id: str, role: str, text: str) -> Optional[Thread]:
+    def add_message_to_thread(self, thread_id: str, role: str, text: str, thinking_logs: Optional[List[str]] = None) -> Optional[Thread]:
         """Add a message to an existing thread"""
         thread = self.load_thread(thread_id)
         
@@ -115,7 +115,7 @@ class ThreadStorage:
             logger.error(f"Cannot add message: Thread {thread_id} not found")
             return None
         
-        thread.add_message(role, text)
+        thread.add_message(role, text, thinking_logs=thinking_logs)
         thread.update_title_from_first_message()
         self.save_thread(thread)
         logger.info(f"Added {role} message to thread {thread_id}")

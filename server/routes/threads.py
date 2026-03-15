@@ -70,7 +70,12 @@ def add_message_to_thread(thread_id: str, request: MessageAddRequest):
     
     try:
         storage = get_thread_storage()
-        thread = storage.add_message_to_thread(thread_id, request.role, request.text)
+        thread = storage.add_message_to_thread(
+            thread_id,
+            request.role,
+            request.text,
+            thinking_logs=request.thinking_logs,
+        )
         
         if not thread:
             logger.warning(f"Thread {thread_id} not found")
