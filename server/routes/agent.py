@@ -42,19 +42,6 @@ def get_file_content(agent_id: str, file_path: str):
     return {"content": full_path.read_text()}
 
 
-class FileContentRequest(BaseModel):
-    content: str
-
-
-@router.post("/agents/{agent_id}/files/{file_path:path}")
-def save_file_content(agent_id: str, file_path: str, request: FileContentRequest):
-    """Save content to a specific file."""
-    full_path = AGENTS_DIR / agent_id / file_path
-    if not full_path.exists() or not full_path.is_file():
-        return {"error": "File not found"}
-    full_path.write_text(request.content)
-    return {"status": "ok"}
-
 class FileManageRequest(BaseModel):
     path: str
     type: str  # "file" or "directory"
@@ -75,6 +62,20 @@ def create_file_or_directory(agent_id: str, request: FileManageRequest):
         full_path.parent.mkdir(parents=True, exist_ok=True)
         full_path.touch()
     
+    return {"status": "ok"}
+
+
+class FileContentRequest(BaseModel):
+    content: str
+
+
+@router.post("/agents/{agent_id}/files/{file_path:path}")
+def save_file_content(agent_id: str, file_path: str, request: FileContentRequest):
+    """Save content to a specific file."""
+    full_path = AGENTS_DIR / agent_id / file_path
+    if not full_path.exists() or not full_path.is_file():
+        return {"error": "File not found"}
+    full_path.write_text(request.content)
     return {"status": "ok"}
 
 
