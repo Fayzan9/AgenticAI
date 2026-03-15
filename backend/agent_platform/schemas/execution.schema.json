@@ -1,0 +1,14 @@
+{
+  "type": "object",
+  "required": ["execution_id","status","agent"],
+  "properties": {
+    "execution_id": { "type": "string" },
+    "agent": { "type": "string" },
+    "status": {
+      "type": "string",
+      "enum": ["pending","running","completed","failed"]
+    },
+    "started_at": { "type": "string" },
+    "completed_at": { "type": "string" }
+  }
+}

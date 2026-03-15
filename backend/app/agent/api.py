@@ -12,7 +12,7 @@ def list_agents():
 	"""List all created agents."""
 	if not AGENTS_DIR.exists():
 		return []
-	return [d.name for d in AGENTS_DIR.iterdir() if d.is_dir()]
+	return [d.stem for d in AGENTS_DIR.glob("*.md")]
 
 @router.post("/agents")
 def create_agent(request: dict):
@@ -20,10 +20,15 @@ def create_agent(request: dict):
 	name = request.get("name")
 	if not name:
 		return {"error": "Name is required"}
-	new_agent_dir = AGENTS_DIR / name
-	if new_agent_dir.exists():
+	new_agent_file = AGENTS_DIR / f"{name}.md"
+	if new_agent_file.exists():
 		return {"error": "Agent already exists"}
-	shutil.copytree(AGENT_TEMPLATE_DIR, new_agent_dir)
+	# If there's a template file, copy it, otherwise create empty
+	template_file = AGENT_TEMPLATE_DIR / "agent_template.md"
+	if template_file.exists():
+		shutil.copy(template_file, new_agent_file)
+	else:
+		new_agent_file.write_text(f"# {name} Agent\n\nTask description here.")
 	return {"status": "ok", "name": name}
 
 @router.patch("/agents/{agent_id}")
@@ -32,8 +37,8 @@ def rename_agent(agent_id: str, request: dict):
 	new_name = request.get("name")
 	if not new_name:
 		return {"error": "New name is required"}
-	old_path = AGENTS_DIR / agent_id
-	new_path = AGENTS_DIR / new_name
+	old_path = AGENTS_DIR / f"{agent_id}.md"
+	new_path = AGENTS_DIR / f"{new_name}.md"
 	if not old_path.exists():
 		return {"error": "Agent not found"}
 	if new_path.exists():
@@ -44,16 +49,16 @@ def rename_agent(agent_id: str, request: dict):
 @router.delete("/agents/{agent_id}")
 def delete_agent(agent_id: str):
 	"""Delete an entire agent directory."""
-	agent_path = AGENTS_DIR / agent_id
+	agent_path = AGENTS_DIR / f"{agent_id}.md"
 	if not agent_path.exists():
 		return {"error": "Agent not found"}
-	shutil.rmtree(agent_path)
+	agent_path.unlink()
 	return {"status": "ok"}
 
 @router.post("/agents/{agent_id}/run")
 def run_agent(agent_id: str, request: RunAgentRequest):
 	"""Execute an agent with the provided prompt."""
-	agent_path = AGENTS_DIR / agent_id
+	agent_path = AGENTS_DIR / f"{agent_id}.md"
 	if not agent_path.exists():
 		return {"error": "Agent not found"}
 	
@@ -66,12 +71,10 @@ def run_agent(agent_id: str, request: RunAgentRequest):
 @router.get("/agents/{agent_id}/input-form")
 def get_agent_input_form(agent_id: str):
 	"""Get the agent's input form HTML if it exists."""
-	agent_path = AGENTS_DIR / agent_id
+	agent_path = AGENTS_DIR / f"{agent_id}.md"
 	if not agent_path.exists():
 		return {"error": "Agent not found"}
 	
-	input_html_path = agent_path / "inputs" / "input.html"
-	if input_html_path.exists():
-		return {"html": input_html_path.read_text()}
-	
+	# In the new structure, we might not have a separate input.html
+	# For now, just return null as per original logic if not found
 	return {"html": None}

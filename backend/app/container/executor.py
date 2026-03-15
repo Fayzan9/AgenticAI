@@ -205,7 +205,7 @@ class ContainerExecutor:
             Command as list of strings
         """
         # Resolve paths
-        agents_dir = AGENT_CWD / "agent_created"
+        agents_dir = AGENT_CWD / "agents"
         executions_dir = EXECUTIONS_DIR
         
         # Get API key from environment

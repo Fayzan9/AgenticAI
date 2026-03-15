@@ -1,0 +1,22 @@
+{
+  "agents": [
+    {
+      "name": "word_counter",
+      "capabilities": ["word_count","text_statistics"],
+      "inputs": ["text"],
+      "outputs": ["word_count"]
+    },
+    {
+      "name": "summarizer",
+      "capabilities": ["summarize_text"],
+      "inputs": ["text"],
+      "outputs": ["summary"]
+    },
+    {
+      "name": "keyword_extractor",
+      "capabilities": ["keyword_extraction"],
+      "inputs": ["text"],
+      "outputs": ["keywords"]
+    }
+  ]
+}

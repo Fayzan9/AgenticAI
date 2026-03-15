@@ -34,7 +34,7 @@ class WorkflowManager:
     """Manages workflow template files"""
     
     def __init__(self):
-        self.workflow_dir = Path(__file__).resolve().parent.parent.parent / "workflow_templates" / "workflow"
+        self.workflow_dir = Path(__file__).resolve().parent.parent.parent / "agent_platform" / "workflows"
     
     def list_files(self) -> List[str]:
         """List all workflow files"""

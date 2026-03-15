@@ -1,0 +1,9 @@
+{
+  "type": "object",
+  "properties": {
+    "timestamp": { "type": "string" },
+    "type": { "type": "string" },
+    "content": { "type": "string" },
+    "details": { "type": "object" }
+  }
+}

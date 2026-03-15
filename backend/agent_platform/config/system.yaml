@@ -1,0 +1,11 @@
+system:
+  name: agent_platform
+
+limits:
+  max_pipeline_steps: 10
+  max_agent_runtime: 30
+
+paths:
+  agents: agents/
+  pipelines: pipelines/
+  executions: executions/
