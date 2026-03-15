@@ -1,0 +1,322 @@
+<!DOCTYPE html>
+
+<html class="h-full" lang="en"><head>
+<meta charset="utf-8"/>
+<meta content="width=device-width, initial-scale=1.0" name="viewport"/>
+<title>Aesthetic Chatbot UI</title>
+<!-- BEGIN: External Scripts -->
+<script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600&amp;family=JetBrains+Mono:wght@400;500&amp;display=swap" rel="stylesheet"/>
+<!-- END: External Scripts -->
+<script>
+    tailwind.config = {
+      theme: {
+        extend: {
+          fontFamily: {
+            sans: ['Inter', 'sans-serif'],
+            mono: ['JetBrains Mono', 'monospace'],
+          },
+          colors: {
+            accent: '#6366f1', // Subtle Indigo accent
+          }
+        }
+      }
+    }
+  </script>
+<style data-purpose="custom-scrollbars">
+    /* Custom scrollbar for a cleaner look */
+    ::-webkit-scrollbar {
+      width: 4px;
+    }
+    ::-webkit-scrollbar-track {
+      background: transparent;
+    }
+    ::-webkit-scrollbar-thumb {
+      background: #e5e7eb;
+      border-radius: 10px;
+    }
+    ::-webkit-scrollbar-thumb:hover {
+      background: #d1d5db;
+    }
+  </style>
+<style data-purpose="transitions">
+    .sidebar-transition {
+      transition: width 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+    }
+    .fade-in {
+      animation: fadeIn 0.5s ease-out;
+    }
+    @keyframes fadeIn {
+      from { opacity: 0; transform: translateY(10px); }
+      to { opacity: 1; transform: translateY(0); }
+    }
+    .thought-expand {
+      transition: max-height 0.3s ease-out, opacity 0.2s ease-out;
+    }
+    .rotate-180 {
+      transform: rotate(180deg);
+    }
+  </style>
+</head>
+<body class="h-full bg-white text-gray-900 font-sans antialiased overflow-hidden">
+<!-- BEGIN: Root Container -->
+<div class="flex h-full w-full overflow-hidden" data-purpose="app-root">
+<!-- BEGIN: Left Sidebar -->
+<aside class="sidebar-transition w-72 h-full bg-gray-50 border-r border-gray-100 flex flex-col shrink-0 overflow-hidden" data-purpose="navigation-sidebar" id="sidebar">
+<!-- New Chat Button Section -->
+<div class="p-4">
+<button class="w-full flex items-center justify-center gap-2 px-4 py-3 bg-white border border-gray-200 rounded-xl text-sm font-medium text-gray-700 hover:bg-gray-100 transition-colors shadow-sm">
+<svg class="w-4 h-4" fill="none" stroke="currentColor" viewbox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><path d="M12 4v16m8-8H4" stroke-linecap="round" stroke-linejoin="round" stroke-width="2"></path></svg>
+<span>New Chat</span>
+</button>
+</div>
+<!-- Recent Chats Section -->
+<div class="flex-1 overflow-y-auto px-3 space-y-1" data-purpose="recent-chats">
+<p class="px-3 py-2 text-[10px] font-semibold text-gray-400 uppercase tracking-widest">Recent Chats</p>
+<button class="w-full flex flex-col text-left px-3 py-3 rounded-lg bg-white border border-gray-200 shadow-sm transition-all group">
+<span class="text-sm font-medium text-gray-800 truncate">Project Brainstorming</span>
+<span class="text-xs text-gray-400 truncate">How should we approach...</span>
+</button>
+<button class="w-full flex flex-col text-left px-3 py-3 rounded-lg hover:bg-gray-100 transition-all group">
+<span class="text-sm font-medium text-gray-700 truncate">Technical Roadmap</span>
+<span class="text-xs text-gray-400 truncate">Discussing the architecture...</span>
+</button>
+<button class="w-full flex flex-col text-left px-3 py-3 rounded-lg hover:bg-gray-100 transition-all group">
+<span class="text-sm font-medium text-gray-700 truncate">Code Review Refactor</span>
+<span class="text-xs text-gray-400 truncate">Optimizing the main loop...</span>
+</button>
+</div>
+<!-- Quick Actions Section -->
+<div class="p-4 border-t border-gray-100 space-y-1" data-purpose="quick-actions">
+<button class="w-full flex items-center gap-3 px-3 py-2 text-sm text-gray-600 rounded-lg hover:bg-gray-200 transition-colors">
+<svg class="w-5 h-5 text-gray-400" fill="none" stroke="currentColor" viewbox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><path d="M10.325 4.317c.426-1.756 2.924-1.756 3.35 0a1.724 1.724 0 002.573 1.066c1.543-.94 3.31.826 2.37 2.37a1.724 1.724 0 001.065 2.572c1.756.426 1.756 2.924 0 3.35a1.724 1.724 0 00-1.066 2.573c.94 1.543-.826 3.31-2.37 2.37a1.724 1.724 0 00-2.572 1.065c-.426 1.756-2.924 1.756-3.35 0a1.724 1.724 0 00-2.573-1.066-1.543.94-3.31-.826-2.37-2.37a1.724 1.724 0 00-1.065-2.572c-1.756-.426-1.756-2.924 0-3.35a1.724 1.724 0 001.066-2.573-.94-1.543.826-3.31 2.37-2.37.996.608 2.296.07 2.572-1.065z" stroke-linecap="round" stroke-linejoin="round" stroke-width="2"></path><path d="M15 12a3 3 0 11-6 0 3 3 0 016 0z" stroke-linecap="round" stroke-linejoin="round" stroke-width="2"></path></svg>
+<span>Settings</span>
+</button>
+<button class="w-full flex items-center justify-between px-3 py-2 text-sm text-gray-600 rounded-lg hover:bg-gray-200 transition-colors">
+<div class="flex items-center gap-3">
+<div class="w-6 h-6 rounded-full bg-accent/10 flex items-center justify-center text-[10px] font-bold text-accent">JD</div>
+<span>Profile</span>
+</div>
+</button>
+</div>
+</aside>
+<!-- END: Left Sidebar -->
+<!-- BEGIN: Main Chat Area -->
+<main class="flex-1 flex flex-col relative bg-white" data-purpose="chat-interface">
+<!-- Top Navigation/Header -->
+<header class="h-16 flex items-center justify-between px-6 border-b border-gray-50">
+<div class="flex items-center gap-3">
+<button aria-label="Toggle Sidebar" class="p-2 -ml-2 text-gray-400 hover:text-gray-600 hover:bg-gray-100 rounded-lg transition-all" id="sidebarToggle">
+<svg class="w-5 h-5" fill="none" stroke="currentColor" viewbox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><path d="M4 6h16M4 12h16M4 18h16" stroke-linecap="round" stroke-linejoin="round" stroke-width="2"></path></svg>
+</button>
+<h1 class="text-sm font-semibold text-gray-700">Project Brainstorming</h1>
+</div>
+<div class="flex items-center gap-4">
+<span class="text-xs text-gray-400 flex items-center gap-1.5">
+<span class="w-2 h-2 rounded-full bg-green-400"></span>
+            System Ready
+          </span>
+</div>
+</header>
+<!-- Chat History Container -->
+<section class="flex-1 overflow-y-auto p-6 md:p-12 space-y-8 max-w-4xl mx-auto w-full" data-purpose="chat-messages" id="chat-history">
+<!-- Welcome message; user/assistant messages appended by JS -->
+<div class="flex gap-4 fade-in" id="welcome-msg">
+<div class="w-8 h-8 rounded-lg bg-gray-100 flex items-center justify-center shrink-0">
+<svg class="w-5 h-5 text-gray-500" fill="none" stroke="currentColor" viewbox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><path d="M13 10V3L4 14h7v7l9-11h-7z" stroke-linecap="round" stroke-linejoin="round" stroke-width="2"></path></svg>
+</div>
+<div class="space-y-2 max-w-2xl">
+<div class="text-sm text-gray-800 leading-relaxed">
+              Hello! I'm your Codex assistant. Send a prompt and I'll run it in your workspace (e.g. list files, edit code, run commands).
+            </div>
+</div>
+</div>
+<!-- AI thought block is inserted by JS when streaming -->
+<div class="flex gap-4 fade-in hidden" data-purpose="ai-thought-process" id="thoughtBlock">
+<div class="w-8 h-8 rounded-lg bg-gray-50 flex items-center justify-center shrink-0 border border-gray-100">
+<svg class="w-4 h-4 text-gray-400 animate-spin" fill="none" stroke="currentColor" viewbox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><path d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15" stroke-linecap="round" stroke-linejoin="round" stroke-width="2"></path></svg>
+</div>
+<div class="flex-1 max-w-2xl">
+<div class="bg-gray-50/50 border border-gray-100 rounded-xl overflow-hidden transition-all duration-300">
+<div class="w-full flex items-center justify-between px-4 py-2.5 text-left">
+<div class="flex items-center gap-2.5">
+<span class="text-xs font-medium text-gray-500">Thinking...</span>
+<span class="text-[11px] text-gray-400 italic" id="thoughtSubtitle">Running Codex</span>
+</div>
+</div>
+<div class="px-4 pb-4 space-y-2 border-t border-gray-100/50 pt-3" id="thoughtContent">
+<div class="font-mono text-[11px] text-gray-500 space-y-1.5" id="thoughtSteps"></div>
+</div>
+</div>
+</div>
+</div>
+</section>
+<!-- Bottom Chat Input Bar -->
+<div class="p-6 md:pb-10 bg-white" data-purpose="input-container">
+<div class="max-w-3xl mx-auto relative group">
+<div class="absolute inset-0 bg-gray-100 rounded-2xl blur-sm opacity-0 group-focus-within:opacity-40 transition-opacity"></div>
+<div class="relative bg-white border border-gray-200 rounded-2xl shadow-sm flex items-center px-4 py-3 focus-within:border-accent/40 transition-all">
+<button class="p-2 text-gray-400 hover:text-gray-600 transition-colors">
+<svg class="w-5 h-5" fill="none" stroke="currentColor" viewbox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><path d="M15.172 7l-6.586 6.586a2 2 0 102.828 2.828l6.414-6.586a4 4 0 00-5.656-5.656l-6.415 6.585a6 6 0 108.486 8.486L20.5 13" stroke-linecap="round" stroke-linejoin="round" stroke-width="2"></path></svg>
+</button>
+<textarea id="chatInput" class="flex-1 border-none focus:ring-0 text-sm py-2 resize-none bg-transparent placeholder-gray-400" placeholder="Ask anything..." rows="1" style="min-height: 40px; max-height: 200px;"></textarea>
+<button type="button" id="sendBtn" class="ml-2 w-10 h-10 bg-accent text-white rounded-xl flex items-center justify-center hover:bg-accent/90 transition-all shadow-lg shadow-accent/20 active:scale-95">
+<svg class="w-5 h-5" fill="none" stroke="currentColor" viewbox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><path d="M5 12h14M12 5l7 7-7 7" stroke-linecap="round" stroke-linejoin="round" stroke-width="2"></path></svg>
+</button>
+</div>
+<div class="text-[10px] text-center text-gray-400 mt-3 font-medium">
+            AI can make mistakes. Verify important information.
+          </div>
+</div>
+</div>
+</main>
+<!-- END: Main Chat Area -->
+</div>
+<!-- END: Root Container -->
+<script data-purpose="ui-interactivity">
+    // Toggle Sidebar
+    const sidebar = document.getElementById('sidebar');
+    const toggleBtn = document.getElementById('sidebarToggle');
+    let isCollapsed = false;
+    toggleBtn.addEventListener('click', () => {
+      if (isCollapsed) {
+        sidebar.style.width = '18rem';
+        sidebar.classList.remove('opacity-0', 'pointer-events-none');
+      } else {
+        sidebar.style.width = '0px';
+        sidebar.classList.add('opacity-0', 'pointer-events-none');
+      }
+      isCollapsed = !isCollapsed;
+    });
+
+    // Chat: elements
+    const chatHistory = document.getElementById('chat-history');
+    const chatInput = document.getElementById('chatInput');
+    const sendBtn = document.getElementById('sendBtn');
+    const thoughtBlock = document.getElementById('thoughtBlock');
+    const thoughtSteps = document.getElementById('thoughtSteps');
+    const thoughtSubtitle = document.getElementById('thoughtSubtitle');
+
+    function appendUserMessage(text) {
+      const div = document.createElement('div');
+      div.className = 'flex gap-4 flex-row-reverse fade-in';
+      div.innerHTML = `
+        <div class="w-8 h-8 rounded-lg bg-accent flex items-center justify-center shrink-0"><span class="text-[10px] font-bold text-white">You</span></div>
+        <div class="space-y-2 max-w-2xl text-right">
+          <div class="inline-block text-sm bg-gray-50 border border-gray-100 px-4 py-2.5 rounded-2xl text-gray-800 leading-relaxed text-left">${escapeHtml(text)}</div>
+        </div>`;
+      chatHistory.appendChild(div);
+      chatHistory.scrollTop = chatHistory.scrollHeight;
+    }
+
+    function appendAssistantMessage(text) {
+      const div = document.createElement('div');
+      div.className = 'flex gap-4 fade-in';
+      div.innerHTML = `
+        <div class="w-8 h-8 rounded-lg bg-gray-100 flex items-center justify-center shrink-0">
+          <svg class="w-5 h-5 text-gray-500" fill="none" stroke="currentColor" viewbox="0 0 24 24"><path d="M13 10V3L4 14h7v7l9-11h-7z" stroke-linecap="round" stroke-linejoin="round" stroke-width="2"></path></svg>
+        </div>
+        <div class="space-y-2 max-w-2xl">
+          <div class="text-sm text-gray-800 leading-relaxed">${escapeHtml(text).replace(/\n/g, '<br>')}</div>
+        </div>`;
+      chatHistory.appendChild(div);
+      chatHistory.scrollTop = chatHistory.scrollHeight;
+    }
+
+    function escapeHtml(s) {
+      const el = document.createElement('div');
+      el.textContent = s;
+      return el.innerHTML;
+    }
+
+    function addThoughtStep(label) {
+      const row = document.createElement('div');
+      row.className = 'flex gap-2';
+      row.innerHTML = `<span class="text-accent shrink-0">›</span><span>${escapeHtml(label)}</span>`;
+      thoughtSteps.appendChild(row);
+    }
+
+    function setThoughtSubtitle(s) {
+      thoughtSubtitle.textContent = s || 'Running Codex';
+    }
+
+    let streaming = false;
+    async function sendPrompt() {
+      const prompt = (chatInput.value || '').trim();
+      if (!prompt || streaming) return;
+      streaming = true;
+      sendBtn.disabled = true;
+      chatInput.disabled = true;
+      appendUserMessage(prompt);
+      chatInput.value = '';
+      chatInput.style.height = 'auto';
+
+      thoughtSteps.innerHTML = '';
+      setThoughtSubtitle('Running Codex');
+      thoughtBlock.classList.remove('hidden');
+      chatHistory.scrollTop = chatHistory.scrollHeight;
+
+      let currentAssistantText = '';
+      try {
+        const res = await fetch('/api/chat', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ prompt }),
+        });
+        if (!res.ok) throw new Error(res.statusText);
+        const reader = res.body.getReader();
+        const dec = new TextDecoder();
+        let buf = '';
+        while (true) {
+          const { value, done } = await reader.read();
+          if (done) break;
+          buf += dec.decode(value, { stream: true });
+          const parts = buf.split('\n\n');
+          buf = parts.pop();
+          for (const part of parts) {
+            const m = part.match(/^data:\s*(.+)/m);
+            if (!m) continue;
+            try {
+              const data = JSON.parse(m[1]);
+              if (data.type === 'returncode') continue;
+              if (data.stream !== 'stdout' || !data.line) continue;
+              const event = JSON.parse(data.line);
+              if (event.type === 'item.completed' && event.item) {
+                const it = event.item;
+                if (it.type === 'agent_message' && it.text) {
+                  currentAssistantText = (currentAssistantText ? currentAssistantText + '\n\n' : '') + it.text;
+                }
+              } else if (event.type === 'item.completed' && event.item && event.item.type === 'command_execution') {
+                const cmd = event.item.command || '';
+                const out = (event.item.aggregated_output || '').slice(0, 80);
+                addThoughtStep('Ran: ' + escapeHtml(cmd) + (out ? ' → ' + escapeHtml(out) : ''));
+              } else if (event.type === 'item.started' && event.item && event.item.type === 'command_execution') {
+                setThoughtSubtitle('Running: ' + (event.item.command || '').replace(/^\/bin\/\w+ -lc '|'$/g, '').slice(0, 50));
+                addThoughtStep('Running: ' + escapeHtml((event.item.command || '').slice(0, 60)));
+              }
+            } catch (_) {}
+          }
+        }
+        if (currentAssistantText) appendAssistantMessage(currentAssistantText);
+      } catch (e) {
+        appendAssistantMessage('Error: ' + e.message);
+      }
+      thoughtBlock.classList.add('hidden');
+      streaming = false;
+      sendBtn.disabled = false;
+      chatInput.disabled = false;
+      chatInput.focus();
+    }
+
+    sendBtn.addEventListener('click', sendPrompt);
+    chatInput.addEventListener('keydown', (e) => {
+      if (e.key === 'Enter' && !e.shiftKey) { e.preventDefault(); sendPrompt(); }
+    });
+
+    // Auto-resize textarea
+    chatInput.addEventListener('input', function() {
+      this.style.height = 'auto';
+      this.style.height = (this.scrollHeight) + 'px';
+    });
+  </script>
+</body></html>
