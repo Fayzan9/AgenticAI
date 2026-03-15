@@ -11,16 +11,13 @@ logger = logging.getLogger(__name__)
 def run_agent_stream(agent_name: str, user_prompt: str, thread_id: Optional[str] = None) -> StreamingResponse:
     """Execute an agent with the given prompt and stream the results."""
     
-    # Generate timestamp for output path
-    timestamp = datetime.now().strftime("%Y%m%d_%H%M%S")
-    
-    # Create execution record
+    # Create execution record and get execution_id
     execution_id = create_execution(agent_name, user_prompt)
     
-    # Format the standalone agent prompt
+    # Format the standalone agent prompt with execution_id
     prompt = RUN_STANDALONE_AGENT_PROMPT.format(
         agent_name=agent_name,
-        timestamp=timestamp,
+        execution_id=execution_id,
         user_prompt=user_prompt
     )
     

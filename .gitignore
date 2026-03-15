@@ -3,3 +3,4 @@ ui/node_modules
 server/.venv
 *.pyc
 backend/data
+backend/workflow_templates/agent_executions
