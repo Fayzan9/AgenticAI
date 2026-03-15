@@ -16,6 +16,9 @@ function RunModal({ agentId, onClose }: RunModalProps) {
   const [prompt, setPrompt] = useState("");
   const [inputHtml, setInputHtml] = useState<string | null>(null);
   const [loadingForm, setLoadingForm] = useState(true);
+  const [running, setRunning] = useState(false);
+  const [executionStatus, setExecutionStatus] = useState<string>("");
+  const [executionLogs, setExecutionLogs] = useState<string[]>([]);
   const iframeRef = useRef<HTMLIFrameElement>(null);
   const overlayRef = useRef<HTMLDivElement>(null);
 
@@ -47,22 +50,95 @@ function RunModal({ agentId, onClose }: RunModalProps) {
     setTimeout(resize, 100);
   }, [inputHtml]);
 
-  // Close on backdrop click
+  // Close on backdrop click (only when not running)
   const handleOverlayClick = (e: React.MouseEvent<HTMLDivElement>) => {
-    if (e.target === overlayRef.current) onClose();
+    if (e.target === overlayRef.current && !running) onClose();
   };
 
-  // Close on Escape key
+  // Close on Escape key (only when not running)
   useEffect(() => {
-    const handler = (e: KeyboardEvent) => { if (e.key === "Escape") onClose(); };
+    const handler = (e: KeyboardEvent) => { 
+      if (e.key === "Escape" && !running) onClose(); 
+    };
     window.addEventListener("keydown", handler);
     return () => window.removeEventListener("keydown", handler);
-  }, [onClose]);
+  }, [onClose, running]);
 
-  const handleRun = () => {
-    // TODO: wire up actual run logic
-    console.log("Running agent:", agentId, "with prompt:", prompt);
-    onClose();
+  const handleRun = async () => {
+    if (!prompt.trim()) return;
+    
+    setRunning(true);
+    setExecutionStatus("Initializing agent execution...");
+    setExecutionLogs([]);
+
+    try {
+      const res = await fetch(`http://localhost:8000/api/agents/${agentId}/run`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ prompt: prompt.trim() }),
+      });
+
+      if (!res.ok) throw new Error(`Failed to run agent: ${res.statusText}`);
+
+      const reader = res.body!.getReader();
+      const dec = new TextDecoder();
+      let buf = "";
+
+      while (true) {
+        const { value, done } = await reader.read();
+        if (done) break;
+        
+        buf += dec.decode(value, { stream: true });
+        const parts = buf.split("\n\n");
+        buf = parts.pop() ?? "";
+        
+        for (const part of parts) {
+          const m = part.match(/^data:\s*(.+)/m);
+          if (!m) continue;
+          
+          try {
+            const data = JSON.parse(m[1]);
+            
+            if (data.type === "returncode") {
+              const code = data.code;
+              if (code === 0) {
+                setExecutionStatus("✓ Agent execution completed successfully");
+              } else {
+                setExecutionStatus(`⚠ Agent execution completed with code ${code}`);
+              }
+              continue;
+            }
+            
+            if (data.stream === "stdout" && data.line) {
+              const event = JSON.parse(data.line);
+              
+              if (event.type === "item.started" && event.item?.type === "command_execution") {
+                const cmd = event.item.command ?? "";
+                setExecutionStatus(`Running: ${cmd.slice(0, 60)}...`);
+                setExecutionLogs(prev => [...prev, `→ ${cmd}`]);
+              } else if (event.type === "item.completed" && event.item?.type === "command_execution") {
+                const output = (event.item.aggregated_output ?? "").trim().slice(0, 100);
+                if (output) {
+                  setExecutionLogs(prev => [...prev, `  ${output}`]);
+                }
+              } else if (event.type === "item.completed" && event.item?.type === "agent_message") {
+                const message = event.item.text ?? "";
+                if (message) {
+                  setExecutionLogs(prev => [...prev, `📝 ${message.slice(0, 200)}`]);
+                }
+              }
+            }
+          } catch (err) {
+            // Ignore parse errors
+          }
+        }
+      }
+    } catch (error) {
+      console.error("Error running agent:", error);
+      setExecutionStatus(`❌ Error: ${error instanceof Error ? error.message : "Unknown error"}`);
+    } finally {
+      setRunning(false);
+    }
   };
 
   return (
@@ -105,11 +181,12 @@ function RunModal({ agentId, onClose }: RunModalProps) {
               onChange={(e) => setPrompt(e.target.value)}
               placeholder="Describe what you want this agent to do…"
               className="w-full px-4 py-3 bg-gray-50 border border-gray-200 rounded-xl text-sm text-gray-800 placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-accent/20 focus:border-accent transition-all resize-none"
+              disabled={running}
             />
           </div>
 
           {/* Additional Inputs (input.html) */}
-          {!loadingForm && inputHtml && (
+          {!loadingForm && inputHtml && !running && (
             <div>
               <div className="flex items-center gap-2 mb-3">
                 <div className="h-px flex-1 bg-gray-100" />
@@ -136,24 +213,55 @@ function RunModal({ agentId, onClose }: RunModalProps) {
               <div className="animate-spin rounded-full h-5 w-5 border-b-2 border-accent" />
             </div>
           )}
+
+          {/* Execution Status */}
+          {running && (
+            <div className="rounded-xl border border-accent/20 bg-accent/5 p-4 space-y-3">
+              <div className="flex items-center gap-3">
+                <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-accent" />
+                <span className="text-sm font-medium text-gray-700">{executionStatus}</span>
+              </div>
+              {executionLogs.length > 0 && (
+                <div className="mt-3 max-h-40 overflow-y-auto bg-gray-50 rounded-lg p-3 space-y-1">
+                  {executionLogs.map((log, idx) => (
+                    <div key={idx} className="text-xs text-gray-600 font-mono">
+                      {log}
+                    </div>
+                  ))}
+                </div>
+              )}
+            </div>
+          )}
         </div>
 
         {/* Footer */}
         <div className="flex items-center justify-end gap-3 px-6 pb-6">
-          <button
-            onClick={onClose}
-            className="px-5 py-2.5 bg-gray-100 text-gray-600 rounded-xl text-sm font-semibold hover:bg-gray-200 transition-colors"
-          >
-            Cancel
-          </button>
-          <button
-            onClick={handleRun}
-            disabled={!prompt.trim()}
-            className="flex items-center gap-2 px-6 py-2.5 bg-accent text-white rounded-xl text-sm font-semibold hover:bg-accent-dark transition-all shadow-sm shadow-accent/20 active:scale-95 disabled:opacity-40 disabled:cursor-not-allowed disabled:active:scale-100"
-          >
-            <PlayIcon className="w-4 h-4" />
-            Run Agent
-          </button>
+          {!running ? (
+            <>
+              <button
+                onClick={onClose}
+                className="px-5 py-2.5 bg-gray-100 text-gray-600 rounded-xl text-sm font-semibold hover:bg-gray-200 transition-colors"
+              >
+                Cancel
+              </button>
+              <button
+                onClick={handleRun}
+                disabled={!prompt.trim()}
+                className="flex items-center gap-2 px-6 py-2.5 bg-accent text-white rounded-xl text-sm font-semibold hover:bg-accent-dark transition-all shadow-sm shadow-accent/20 active:scale-95 disabled:opacity-40 disabled:cursor-not-allowed disabled:active:scale-100"
+              >
+                <PlayIcon className="w-4 h-4" />
+                Run Agent
+              </button>
+            </>
+          ) : (
+            <button
+              onClick={onClose}
+              disabled={running}
+              className="px-5 py-2.5 bg-gray-100 text-gray-600 rounded-xl text-sm font-semibold hover:bg-gray-200 transition-colors disabled:opacity-40 disabled:cursor-not-allowed"
+            >
+              Close
+            </button>
+          )}
         </div>
       </div>
     </div>

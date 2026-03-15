@@ -21,8 +21,26 @@ CORS_ALLOW_METHODS = ["*"]
 CORS_ALLOW_HEADERS = ["*"]
 
 AGENT_PROMPT = """
-You are an agent that processess the users request using agents/workflow.md guidelines
-thread_id: {thread_id}
+Hi, you are an Agentic AI that processes the users request.
+
+workflow -> workflow_templates/workflow/workflow_router.md
+
+Thread ID: {thread_id}
+
+User Request:
+{user_prompt}
+"""
+
+RUN_STANDALONE_AGENT_PROMPT = """
+Hi, you are an Agentic AI that processes the users request using the provided agent workflow.
+
+# Workflow to Run
+workflow -> workflow_templates/workflow/workflow_router.md
+
+# Agent To Use
+agent_name -> {agent_name}
+agent_output_path -> workflow_templates/agent_execution/{agent_name}/{timestamp}/"
+
 User Request:
 {user_prompt}
 """

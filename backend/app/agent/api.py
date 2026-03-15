@@ -2,6 +2,8 @@
 import shutil
 from fastapi import APIRouter
 from config import AGENTS_DIR, AGENT_TEMPLATE_DIR
+from app.agent.models.request import RunAgentRequest
+from app.agent.agent import run_agent_stream
 
 router = APIRouter()
 
@@ -47,3 +49,29 @@ def delete_agent(agent_id: str):
 		return {"error": "Agent not found"}
 	shutil.rmtree(agent_path)
 	return {"status": "ok"}
+
+@router.post("/agents/{agent_id}/run")
+def run_agent(agent_id: str, request: RunAgentRequest):
+	"""Execute an agent with the provided prompt."""
+	agent_path = AGENTS_DIR / agent_id
+	if not agent_path.exists():
+		return {"error": "Agent not found"}
+	
+	return run_agent_stream(
+		agent_name=agent_id,
+		user_prompt=request.prompt,
+		thread_id=request.thread_id
+	)
+
+@router.get("/agents/{agent_id}/input-form")
+def get_agent_input_form(agent_id: str):
+	"""Get the agent's input form HTML if it exists."""
+	agent_path = AGENTS_DIR / agent_id
+	if not agent_path.exists():
+		return {"error": "Agent not found"}
+	
+	input_html_path = agent_path / "inputs" / "input.html"
+	if input_html_path.exists():
+		return {"html": input_html_path.read_text()}
+	
+	return {"html": None}
