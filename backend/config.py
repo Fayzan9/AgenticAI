@@ -34,7 +34,7 @@ ENABLE_CONTAINER_EXECUTION = os.getenv("ENABLE_CONTAINER_EXECUTION", "false").lo
 ACCESS_TO_INTERNET = os.getenv("ACCESS_TO_INTERNET", "false").lower() == "true"
 
 # Model and pricing configuration
-ACTIVE_MODEL = "gpt-5-mini"
+ACTIVE_MODEL = "gpt-5.3-codex"  # Default model for agent execution
 
 PRICES = {
     "gpt-5.4": {

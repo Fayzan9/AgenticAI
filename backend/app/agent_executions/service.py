@@ -63,6 +63,11 @@ def add_execution_log(agent_name: str, execution_id: str, log: ExecutionLog):
         return
     
     logs = json.loads(logs_path.read_text())
+    
+    # Defensive: handle corrupted logs file
+    if not isinstance(logs, list):
+        logs = []
+    
     logs.append(log.dict())
     logs_path.write_text(json.dumps(logs, indent=2))
 
@@ -77,7 +82,15 @@ def complete_execution(agent_name: str, execution_id: str, return_code: int, usa
     
     metadata = json.loads(metadata_path.read_text())
     completed_at = datetime.now().isoformat()
-    started_at = datetime.fromisoformat(metadata["started_at"])
+    
+    # Defensive: handle missing started_at field
+    if "started_at" not in metadata:
+        # Use current time as fallback if started_at is missing
+        metadata["started_at"] = completed_at
+        started_at = datetime.fromisoformat(completed_at)
+    else:
+        started_at = datetime.fromisoformat(metadata["started_at"])
+    
     completed_dt = datetime.fromisoformat(completed_at)
     
     metadata["status"] = "completed" if return_code == 0 else "failed"

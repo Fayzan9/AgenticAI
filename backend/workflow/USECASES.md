@@ -34,3 +34,11 @@ Use cases ensure that similar requests are handled consistently and predictably.
 ## blood_report_analyser
 **Purpose:** Processes a blood test report and generates a structured medical summary with key biomarkers analysis.
 **Location:** `usecases/blood_report_analyser/`
+
+## expense_receipt_analyser
+**Purpose:** Extracts and summarizes key information from expense receipts, such as vendor, date, total amount, and itemized expenses, to facilitate expense tracking and reporting.  
+**Location:** `usecases/expense_receipt_analyser/`
+
+## hospital_bill_analyser
+**Purpose:** Analyzes hospital bills to extract patient details, services rendered, charges, and payment information, providing a structured summary for record-keeping or insurance claims.  
+**Location:** `usecases/hospital_bill_analyser/`

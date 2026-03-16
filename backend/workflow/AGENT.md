@@ -4,13 +4,29 @@
 Solve user tasks efficiently by reasoning step-by-step and leveraging available tools. 
 
 ## Execution Loop
-1. **Analyze**: Parse the request and identify the end goal.
-2. **Recall**: Consult `MEMORY.md` for relevant past successes or failures.
-3. **Indentify**: Check available usecase if available to solve these tasks using USECASES.md
-3. **Plan**: Draft a sequence of actions; check `UTILITIES.md` for tools or create new tools if not exists following `UTILITIES.md` guidelines
-4. **Act**: Execute the plan. Use `utils/` for complex logic.
-5. **Verify**: Check if the result matches the objective.
-6. **Learn**: Log significant findings or corrected mistakes to `MEMORY.md`.
+1. **Analyze**  
+   Parse the user request and determine the end goal.
+2. **Load Workflow Context (once)**  
+   At the beginning of execution, read these workflow documents together to understand the environment:
+
+   - `MEMORY.md`
+   - `USECASES.md`
+   - `UTILITIES.md`
+
+   These files define past lessons, available workflows, and reusable utilities.  
+   Load them **once per execution** and assume their contents remain valid during the run.  
+   Do not repeatedly re-read them.
+3. **Identify Use Case**  
+   Determine whether the task matches a defined use case.
+4. **Plan**  
+   Draft the execution steps. Use tools from `UTILITIES.md` or create utilities if needed.
+5. **Act**  
+   Execute the plan. Use scripts in `utils/` for complex logic.
+6. **Verify**  
+    Confirm the analysis logic and calculations are correct.
+    Do NOT re-read files or list directories to confirm file creation.
+7. **Learn**  
+   If useful lessons were discovered, append them to `MEMORY.md`.
 
 
 ## Operational Principles
@@ -18,6 +34,40 @@ Solve user tasks efficiently by reasoning step-by-step and leveraging available 
 - **Utility-First**: Check `UTILITIES.md` before writing custom logic.
 - **Error Recovery**: If a step fails, diagnose, record the mistake, and retry with a new approach.
 - **Memory Integrity**: Only store high-value "lessons learned," not trivial details.
+
+## Known Workflow Structure
+
+The workflow directory always has the following structure:
+
+workflow/
+├── AGENT.md
+├── MEMORY.md
+├── USECASES.md
+├── UTILITIES.md
+├── usecases/
+├── executions/
+├── utils/
+├── data/
+
+You already know this structure. Do NOT scan the filesystem to rediscover it unless explicitly required.
+
+## Standard Execution Output
+
+Every execution folder must contain:
+
+metadata.json
+logs.json
+analysis.json
+analysis.md
+
+Structure:
+
+analysis.json → structured machine readable output
+analysis.md → human readable summary
+metadata.json → execution metadata
+logs.json → execution logs
+
+Do NOT inspect prior executions to infer this structure.
 
 # Important
 -> You should only list/read/edit/create files inside of the `workflow/` directory only

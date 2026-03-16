@@ -10,7 +10,9 @@ This file stores distilled knowledge to improve future performance.
 ## 📝 Format for New Entries
 - **Date/Task**: Brief description of the context.
 - **Outcome**: Success or Failure.
-- **Lesson**: The specific takeaway (e.g., "Always use path X for Y").
+- **Trigger**: When this lesson should be applied.
+- **Rule**: The concrete action the agent should follow.
+- **Lesson**: Additional explanation or context.
 
 ---
 
@@ -30,3 +32,6 @@ This file stores distilled knowledge to improve future performance.
 - **Date/Task**: 2026-03-17 - Hospital bill reconciliation.
 - **Outcome**: Success.
 - **Lesson**: Always recompute totals from line items and compare against stated summary; flag exact missing amount and likely omitted charge heads to speed manual verification.
+- **Date/Task**: 2026-03-17 - Grocery receipt structured extraction.
+- **Outcome**: Success.
+- **Lesson**: For receipts with quantity and per-item prices, always compute `line_total = quantity x unit_price` and reconcile against printed subtotal/tax/total; preserve both printed and recomputed totals in output to make discrepancies auditable.
