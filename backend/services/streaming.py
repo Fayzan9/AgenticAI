@@ -160,7 +160,7 @@ def stream_codex_events(prompt: str, thread_id: Optional[str] = None):
 
             # forward event to SSE
             if stream == "stdout":
-                logger.info"STDOUT: %s", line[:200] if len(line) > 200 else line)
+                logger.info("STDOUT: %s", line[:200] if len(line) > 200 else line)
             elif stream == "stderr":
                 logger.warning("STDERR: %s", line)
             
