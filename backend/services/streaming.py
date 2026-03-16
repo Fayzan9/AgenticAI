@@ -9,7 +9,7 @@ from typing import Optional, Tuple
 from datetime import datetime
 
 from services.codex_cli import CodexCLI
-from config import AGENT_CWD
+from config import WORKFLOW_DIR
 
 logger = logging.getLogger(__name__)
 
@@ -111,16 +111,15 @@ def stream_codex_events(prompt: str, thread_id: Optional[str] = None):
 
     logger.info("Starting Codex event stream")
 
-    os.makedirs(AGENT_CWD, exist_ok=True)
-
-    cli = CodexCLI(cwd=AGENT_CWD)
+    cli = CodexCLI(cwd=WORKFLOW_DIR)
 
     event_count = 0
     assistant_final_response: str = ""
     thinking_logs: list = []
 
     try:
-
+        print(f'(stream_codex_events) PROMPT LOADED SUCCESSFULLY: {prompt[:500]}...')  # Debug log to confirm prompt loading  
+        
         for stream, line in cli.run_streaming(prompt, yield_lines=True):
 
             # returncode event
@@ -197,16 +196,14 @@ def stream_codex_events_with_tracking(
 
     logger.info(f"Starting Codex event stream with tracking for execution {execution_id}")
 
-    os.makedirs(AGENT_CWD, exist_ok=True)
-
-    cli = CodexCLI(cwd=AGENT_CWD)
+    cli = CodexCLI(cwd=WORKFLOW_DIR)
 
     event_count = 0
     assistant_final_response: str = ""
     thinking_logs: list = []
 
     try:
-
+        
         for stream, line in cli.run_streaming(prompt, yield_lines=True):
 
             # returncode event

@@ -19,6 +19,7 @@ function RunModal({ agentId, onClose }: RunModalProps) {
   const [running, setRunning] = useState(false);
   const [executionStatus, setExecutionStatus] = useState<string>("");
   const [executionLogs, setExecutionLogs] = useState<string[]>([]);
+  const [finalOutput, setFinalOutput] = useState<string>("");
   const iframeRef = useRef<HTMLIFrameElement>(null);
   const overlayRef = useRef<HTMLDivElement>(null);
 
@@ -70,6 +71,7 @@ function RunModal({ agentId, onClose }: RunModalProps) {
     setRunning(true);
     setExecutionStatus("Initializing agent execution...");
     setExecutionLogs([]);
+    setFinalOutput("");
 
     try {
       const res = await fetch(`http://localhost:8000/api/agents/${agentId}/run`, {
@@ -124,7 +126,8 @@ function RunModal({ agentId, onClose }: RunModalProps) {
               } else if (event.type === "item.completed" && event.item?.type === "agent_message") {
                 const message = event.item.text ?? "";
                 if (message) {
-                  setExecutionLogs(prev => [...prev, `📝 ${message.slice(0, 200)}`]);
+                  setFinalOutput(message);
+                  setExecutionLogs(prev => [...prev, `📝 Agent response received`]);
                 }
               }
             }
@@ -230,6 +233,20 @@ function RunModal({ agentId, onClose }: RunModalProps) {
                   ))}
                 </div>
               )}
+            </div>
+          )}
+
+          {/* Final Output */}
+          {!running && finalOutput && (
+            <div className="rounded-xl border border-green-200 bg-green-50 p-4 space-y-2">
+              <div className="flex items-center gap-2">
+                <span className="text-sm font-semibold text-green-700">Agent Response</span>
+              </div>
+              <div className="mt-2 max-h-60 overflow-y-auto bg-white rounded-lg p-3">
+                <pre className="text-xs text-gray-700 whitespace-pre-wrap font-mono">
+                  {finalOutput}
+                </pre>
+              </div>
             </div>
           )}
         </div>

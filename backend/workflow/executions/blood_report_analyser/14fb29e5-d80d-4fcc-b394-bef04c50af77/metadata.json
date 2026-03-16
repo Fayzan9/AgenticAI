@@ -1,0 +1,10 @@
+{
+  "execution_id": "14fb29e5-d80d-4fcc-b394-bef04c50af77",
+  "agent_name": "blood_report_analyser",
+  "prompt": "I want you the given analyze blood report \nworkflow/data/CBC-test-report-format-example-sample-template-Drlogy-lab-report.pdf",
+  "status": "completed",
+  "return_code": 0,
+  "started_at": "2026-03-17T02:31:32.833177",
+  "completed_at": "2026-03-17T02:33:30.833364",
+  "duration_seconds": 118.000187
+}

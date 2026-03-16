@@ -2,13 +2,10 @@
 thread.py: Data models for thread management
 """
 from datetime import datetime
-from typing import List, Optional
+from typing import List, Optional, Dict, Any
 from pydantic import BaseModel, Field
 import uuid
 
-
-
-from typing import Dict, Any
 
 class Message(BaseModel):
     """Represents a single message in a thread"""

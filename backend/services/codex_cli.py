@@ -12,7 +12,7 @@ from dataclasses import dataclass
 from pathlib import Path
 from typing import Callable, Iterator, Optional, Union
 
-from config import THREADS_DIR
+from config import THREADS_DIR, ACCESS_TO_INTERNET
 
 
 # ------------------------------------------------------------------
@@ -44,7 +44,14 @@ class CodexCommandBuilder:
 
     def build(self, prompt: Optional[str] = None) -> list[str]:
         cfg = self.config
-        args = [cfg.resolve_bin(), "exec"]
+        args = [cfg.resolve_bin()]
+        
+        # Global flags before subcommand
+        if ACCESS_TO_INTERNET:
+            args.append("--search")
+        
+        # Add exec subcommand
+        args.append("exec")
 
         if cfg.json_events:
             args.append("--json")

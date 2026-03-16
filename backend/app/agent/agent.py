@@ -5,7 +5,8 @@ from fastapi.responses import StreamingResponse
 from services.streaming import stream_codex_events_with_tracking
 from app.agent_executions.service import create_execution, add_execution_log, complete_execution
 from app.agent_executions.models import ExecutionLog
-from config import RUN_STANDALONE_AGENT_PROMPT, ENABLE_CONTAINER_EXECUTION
+from services.utils import insert_user_request
+from config import AGENT_FILE_PATH, ENABLE_CONTAINER_EXECUTION
 
 logger = logging.getLogger(__name__)
 
@@ -21,13 +22,13 @@ if ENABLE_CONTAINER_EXECUTION:
         container_executor = None
 
 
-def run_agent_stream(agent_name: str, user_prompt: str, thread_id: Optional[str] = None) -> StreamingResponse:
+def run_agent_stream(usecase_name: str, user_prompt: str, thread_id: Optional[str] = None) -> StreamingResponse:
     """Execute an agent with the given prompt and stream the results."""
     
     # Create execution record and get execution_id
-    execution_id = create_execution(agent_name, user_prompt)
+    execution_id = create_execution(usecase_name, user_prompt)
     
-    logger.info(f"Running agent '{agent_name}' with execution_id {execution_id}")
+    logger.info(f"Running agent '{usecase_name}' with execution_id {execution_id}")
     
     # Choose execution method
     if ENABLE_CONTAINER_EXECUTION and container_executor:
@@ -35,7 +36,7 @@ def run_agent_stream(agent_name: str, user_prompt: str, thread_id: Optional[str]
         return StreamingResponse(
             stream_container_execution(
                 container_executor,
-                agent_name,
+                usecase_name,
                 execution_id,
                 user_prompt,
                 thread_id
@@ -49,17 +50,13 @@ def run_agent_stream(agent_name: str, user_prompt: str, thread_id: Optional[str]
         )
     else:
         logger.info("Using direct execution")
-        # Original execution method
-        prompt = RUN_STANDALONE_AGENT_PROMPT.format(
-            agent_name=agent_name,
-            execution_id=execution_id,
-            user_prompt=user_prompt
-        )
+
+        prompt = insert_user_request(AGENT_FILE_PATH, user_prompt, execution_id)
         
         return StreamingResponse(
             stream_codex_events_with_tracking(
                 prompt, 
-                agent_name=agent_name,
+                agent_name=usecase_name,
                 execution_id=execution_id,
                 thread_id=thread_id
             ),

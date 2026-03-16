@@ -1,7 +1,7 @@
 # app/agent/api.py: API for agent CRUD and run operations
 import shutil
 from fastapi import APIRouter
-from config import AGENTS_DIR, AGENT_TEMPLATE_DIR
+from config import AGENT_DIR
 from app.agent.models.request import RunAgentRequest
 from app.agent.agent import run_agent_stream
 
@@ -10,9 +10,9 @@ router = APIRouter()
 @router.get("/agents")
 def list_agents():
 	"""List all created agents."""
-	if not AGENTS_DIR.exists():
+	if not AGENT_DIR.exists():
 		return []
-	return [d.name for d in AGENTS_DIR.iterdir() if d.is_dir()]
+	return [d.name for d in AGENT_DIR.iterdir() if d.is_dir()]
 
 @router.post("/agents")
 def create_agent(request: dict):
@@ -20,10 +20,13 @@ def create_agent(request: dict):
 	name = request.get("name")
 	if not name:
 		return {"error": "Name is required"}
-	new_agent_dir = AGENTS_DIR / name
+	
+	new_agent_dir = AGENT_DIR / name
+	
 	if new_agent_dir.exists():
 		return {"error": "Agent already exists"}
-	shutil.copytree(AGENT_TEMPLATE_DIR, new_agent_dir)
+	
+	new_agent_dir.mkdir(parents=True, exist_ok=False)
 	return {"status": "ok", "name": name}
 
 @router.patch("/agents/{agent_id}")
@@ -32,8 +35,8 @@ def rename_agent(agent_id: str, request: dict):
 	new_name = request.get("name")
 	if not new_name:
 		return {"error": "New name is required"}
-	old_path = AGENTS_DIR / agent_id
-	new_path = AGENTS_DIR / new_name
+	old_path = AGENT_DIR / agent_id
+	new_path = AGENT_DIR / new_name
 	if not old_path.exists():
 		return {"error": "Agent not found"}
 	if new_path.exists():
@@ -44,7 +47,7 @@ def rename_agent(agent_id: str, request: dict):
 @router.delete("/agents/{agent_id}")
 def delete_agent(agent_id: str):
 	"""Delete an entire agent directory."""
-	agent_path = AGENTS_DIR / agent_id
+	agent_path = AGENT_DIR / agent_id
 	if not agent_path.exists():
 		return {"error": "Agent not found"}
 	shutil.rmtree(agent_path)
@@ -53,12 +56,9 @@ def delete_agent(agent_id: str):
 @router.post("/agents/{agent_id}/run")
 def run_agent(agent_id: str, request: RunAgentRequest):
 	"""Execute an agent with the provided prompt."""
-	agent_path = AGENTS_DIR / agent_id
-	if not agent_path.exists():
-		return {"error": "Agent not found"}
 	
 	return run_agent_stream(
-		agent_name=agent_id,
+		usecase_name=agent_id,
 		user_prompt=request.prompt,
 		thread_id=request.thread_id
 	)
@@ -66,7 +66,7 @@ def run_agent(agent_id: str, request: RunAgentRequest):
 @router.get("/agents/{agent_id}/input-form")
 def get_agent_input_form(agent_id: str):
 	"""Get the agent's input form HTML if it exists."""
-	agent_path = AGENTS_DIR / agent_id
+	agent_path = AGENT_DIR / agent_id
 	if not agent_path.exists():
 		return {"error": "Agent not found"}
 	

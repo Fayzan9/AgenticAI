@@ -9,7 +9,7 @@ import subprocess
 from pathlib import Path
 from typing import Iterator, Optional
 
-from .config import (
+from .container_configuration import (
     CONTAINER_IMAGE,
     CPU_LIMIT,
     MEMORY_LIMIT,
@@ -18,7 +18,7 @@ from .config import (
     ENABLE_NETWORK,
     PODMAN_BIN,
 )
-from config import AGENT_CWD, EXECUTIONS_DIR
+from config import WORKFLOW_DIR, EXECUTIONS_DIR, AGENT_DIR
 
 logger = logging.getLogger(__name__)
 
@@ -85,7 +85,7 @@ class ContainerExecutor:
                 stdout=subprocess.PIPE,
                 stderr=subprocess.PIPE,
                 text=True,
-                cwd=str(AGENT_CWD),
+                cwd=str(WORKFLOW_DIR),  # Set working directory for container execution
             )
             
             # Stream stdout line by line
@@ -159,7 +159,7 @@ class ContainerExecutor:
                 capture_output=True,
                 text=True,
                 timeout=EXECUTION_TIMEOUT,
-                cwd=str(AGENT_CWD),
+                cwd=str(WORKFLOW_DIR)  # Set working directory for container execution,
             )
             
             if result.returncode != 0:
@@ -205,7 +205,6 @@ class ContainerExecutor:
             Command as list of strings
         """
         # Resolve paths
-        agents_dir = AGENT_CWD / "agent_created"
         executions_dir = EXECUTIONS_DIR
         
         # Get API key from environment
@@ -230,7 +229,7 @@ class ContainerExecutor:
             f"--memory={MEMORY_LIMIT}",
             
             # Volumes (read-only agents, read-write executions)
-            "-v", f"{agents_dir.resolve()}:/workspace/agents:ro",
+            "-v", f"{WORKFLOW_DIR.resolve()}:/workspace/workflow:ro",
             "-v", f"{executions_dir.resolve()}:/workspace/executions:rw",
         ]
         

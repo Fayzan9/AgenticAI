@@ -29,6 +29,7 @@ class ConfigManager:
             (r'^CORS_ALLOW_METHODS\s*=\s*(.+)$', 'CORS_ALLOW_METHODS'),
             (r'^CORS_ALLOW_HEADERS\s*=\s*(.+)$', 'CORS_ALLOW_HEADERS'),
             (r'^ENABLE_CONTAINER_EXECUTION\s*=\s*(.+)$', 'ENABLE_CONTAINER_EXECUTION'),
+            (r'^ACCESS_TO_INTERNET\s*=\s*(.+)$', 'ACCESS_TO_INTERNET'),
         ]
         
         for pattern, key in patterns:

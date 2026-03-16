@@ -59,3 +59,7 @@ app.include_router(settings_router, prefix="/api", tags=["Settings"])
 app.include_router(uploads_router, prefix="/api", tags=["Uploads"])
 
 logger.info("Agent API server started successfully")
+
+if __name__ == "__main__":
+    import uvicorn
+    uvicorn.run("main:app", host="0.0.0.0", port=8000)
