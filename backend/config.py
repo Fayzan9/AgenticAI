@@ -32,3 +32,44 @@ CORS_ALLOW_HEADERS = ["*"]
 # Container execution settings
 ENABLE_CONTAINER_EXECUTION = os.getenv("ENABLE_CONTAINER_EXECUTION", "false").lower() == "true"
 ACCESS_TO_INTERNET = os.getenv("ACCESS_TO_INTERNET", "false").lower() == "true"
+
+# Model and pricing configuration
+ACTIVE_MODEL = "gpt-5-mini"
+
+PRICES = {
+    "gpt-5.4": {
+        "input_tokens": 2.50,
+        "cached_input_tokens": 0.625,
+        "output_tokens": 15.00
+    },
+    "gpt-5.3-codex": {
+        "input_tokens": 1.75,
+        "cached_input_tokens": 0.175,
+        "output_tokens": 14.00
+    },
+    "gpt-5.2-codex": {
+        "input_tokens": 1.75,
+        "cached_input_tokens": 0.175,
+        "output_tokens": 14.00
+    },
+    "gpt-5.2": {
+        "input_tokens": 1.75,
+        "cached_input_tokens": 0.175,
+        "output_tokens": 14.00
+    },
+    "gpt-5.1-codex-max": {
+        "input_tokens": 1.25,
+        "cached_input_tokens": 0.125,
+        "output_tokens": 10.00
+    },
+    "gpt-5.1-codex-mini": {
+        "input_tokens": 0.25,
+        "cached_input_tokens": 0.025,
+        "output_tokens": 2.00
+    },
+    "gpt-5-mini": {
+        "input_tokens": 0.25,
+        "cached_input_tokens": 0.025,
+        "output_tokens": 2.00
+    }
+}

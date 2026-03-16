@@ -27,3 +27,6 @@ This file stores distilled knowledge to improve future performance.
 - **Date/Task**: 2026-03-17 - CBC template PDF text quality handling.
 - **Outcome**: Success.
 - **Lesson**: Template lab PDFs may contain tightly concatenated OCR text; store both raw extracted text and normalized structured outputs (`analysis.json` + `analysis.md`) for auditability.
+- **Date/Task**: 2026-03-17 - Hospital bill reconciliation.
+- **Outcome**: Success.
+- **Lesson**: Always recompute totals from line items and compare against stated summary; flag exact missing amount and likely omitted charge heads to speed manual verification.

@@ -9,7 +9,7 @@ from typing import Optional, Tuple
 from datetime import datetime
 
 from services.codex_cli import CodexCLI
-from config import WORKFLOW_DIR
+from config import WORKFLOW_DIR, ACTIVE_MODEL
 
 logger = logging.getLogger(__name__)
 
@@ -77,6 +77,13 @@ def _extract_assistant_message(event: dict) -> Optional[str]:
     return None
 
 
+def _extract_usage(event: dict) -> Optional[dict]:
+    """Extract token usage from turn.completed event."""
+    if event.get("type") == "turn.completed":
+        return event.get("usage")
+    return None
+
+
 # ---------------------------------------------------------
 # Thread persistence
 # ---------------------------------------------------------
@@ -111,7 +118,7 @@ def stream_codex_events(prompt: str, thread_id: Optional[str] = None):
 
     logger.info("Starting Codex event stream")
 
-    cli = CodexCLI(cwd=WORKFLOW_DIR)
+    cli = CodexCLI(cwd=WORKFLOW_DIR, model=ACTIVE_MODEL)
 
     event_count = 0
     assistant_final_response: str = ""
@@ -152,6 +159,11 @@ def stream_codex_events(prompt: str, thread_id: Optional[str] = None):
                         logger.info("[THINKING] %s", thinking)
 
             # forward event to SSE
+            if stream == "stdout":
+                logger.info"STDOUT: %s", line[:200] if len(line) > 200 else line)
+            elif stream == "stderr":
+                logger.warning("STDERR: %s", line)
+            
             yield _sse({"stream": stream, "line": line})
 
         logger.info("Streaming completed. Total events: %s", event_count)
@@ -196,11 +208,12 @@ def stream_codex_events_with_tracking(
 
     logger.info(f"Starting Codex event stream with tracking for execution {execution_id}")
 
-    cli = CodexCLI(cwd=WORKFLOW_DIR)
+    cli = CodexCLI(cwd=WORKFLOW_DIR, model=ACTIVE_MODEL)
 
     event_count = 0
     assistant_final_response: str = ""
     thinking_logs: list = []
+    usage_data = None
 
     try:
         
@@ -209,7 +222,7 @@ def stream_codex_events_with_tracking(
             # returncode event
             if stream == "returncode":
                 logger.info("Codex execution completed with code %s", line)
-                complete_execution(agent_name, execution_id, line)
+                complete_execution(agent_name, execution_id, line, usage_data)
                 
                 # Log completion
                 add_execution_log(
@@ -236,6 +249,12 @@ def stream_codex_events_with_tracking(
                 event_data = _parse_codex_event(line)
 
                 if event_data:
+                    # Extract usage data
+                    usage = _extract_usage(event_data)
+                    if usage:
+                        usage_data = usage
+                        logger.info("Captured token usage: %s", usage)
+                    
                     # assistant response
                     text = _extract_assistant_message(event_data)
                     if text:
@@ -282,10 +301,11 @@ def stream_codex_events_with_tracking(
                             )
 
             # forward event to SSE
-            yield _sse({"stream": stream, "line": line})
-
-        logger.info("Streaming completed. Total events: %s", event_count)
-
+            if stream == "stdout":
+                logger.debug("STDOUT: %s", line[:200] if len(line) > 200 else line)
+            elif stream == "stderr":
+                logger.warning("STDERR: %s", line)
+            
         # -------------------------------------------------
         # Save assistant response to thread if provided
         # -------------------------------------------------
@@ -302,7 +322,7 @@ def stream_codex_events_with_tracking(
         logger.exception("Error during streaming")
         
         # Mark execution as failed
-        complete_execution(agent_name, execution_id, -1)
+        complete_execution(agent_name, execution_id, -1, None)
         add_execution_log(
             agent_name,
             execution_id,

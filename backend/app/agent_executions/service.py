@@ -67,8 +67,8 @@ def add_execution_log(agent_name: str, execution_id: str, log: ExecutionLog):
     logs_path.write_text(json.dumps(logs, indent=2))
 
 
-def complete_execution(agent_name: str, execution_id: str, return_code: int):
-    """Mark execution as completed"""
+def complete_execution(agent_name: str, execution_id: str, return_code: int, usage_data: Optional[dict] = None):
+    """Mark execution as completed and save token usage"""
     execution_dir = EXECUTIONS_DIR / agent_name / execution_id
     metadata_path = execution_dir / "metadata.json"
     
@@ -84,6 +84,11 @@ def complete_execution(agent_name: str, execution_id: str, return_code: int):
     metadata["return_code"] = return_code
     metadata["completed_at"] = completed_at
     metadata["duration_seconds"] = (completed_dt - started_at).total_seconds()
+    
+    # Add token usage and cost if available
+    if usage_data:
+        from services.utils import calculate_cost
+        metadata["usage"] = calculate_cost(usage_data)
     
     metadata_path.write_text(json.dumps(metadata, indent=2))
 
