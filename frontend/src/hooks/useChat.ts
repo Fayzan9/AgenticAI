@@ -112,8 +112,8 @@ export function useChat() {
           try {
             const data = JSON.parse(m[1]);
             if (data.type === "returncode") continue;
-            if (data.stream !== "stdout" || !data.line) continue;
-            const event = JSON.parse(data.line);
+            if (data.stream !== "stdout" || !data.data) continue;
+            const event = JSON.parse(data.data);
             if (event.type === "item.completed" && event.item) {
               const it = event.item;
               if (it.type === "agent_message" && it.text) {

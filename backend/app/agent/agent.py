@@ -2,7 +2,7 @@ import logging
 from datetime import datetime
 from typing import Optional
 from fastapi.responses import StreamingResponse
-from services.streaming import stream_codex_events_with_tracking
+from services.streaming import stream_codex
 from app.agent_executions.service import create_execution, add_execution_log, complete_execution
 from app.agent_executions.models import ExecutionLog
 from services.utils import insert_user_request
@@ -54,7 +54,7 @@ def run_agent_stream(usecase_name: str, user_prompt: str, thread_id: Optional[st
         prompt = insert_user_request(AGENT_FILE_PATH, user_prompt, execution_id)
         
         return StreamingResponse(
-            stream_codex_events_with_tracking(
+            stream_codex(
                 prompt, 
                 agent_name=usecase_name,
                 execution_id=execution_id,

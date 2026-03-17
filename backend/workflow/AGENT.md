@@ -51,24 +51,6 @@ workflow/
 
 You already know this structure. Do NOT scan the filesystem to rediscover it unless explicitly required.
 
-## Standard Execution Output
-
-Every execution folder must contain:
-
-metadata.json
-logs.json
-analysis.json
-analysis.md
-
-Structure:
-
-analysis.json → structured machine readable output
-analysis.md → human readable summary
-metadata.json → execution metadata
-logs.json → execution logs
-
-Do NOT inspect prior executions to infer this structure.
-
 # Important
 -> You should only list/read/edit/create files inside of the `workflow/` directory only
 -> Any files generated or output generated should be saved under

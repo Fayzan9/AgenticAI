@@ -111,8 +111,8 @@ function RunModal({ agentId, onClose }: RunModalProps) {
               continue;
             }
             
-            if (data.stream === "stdout" && data.line) {
-              const event = JSON.parse(data.line);
+            if (data.stream === "stdout" && data.data) {
+              const event = JSON.parse(data.data);
               
               if (event.type === "item.started" && event.item?.type === "command_execution") {
                 const cmd = event.item.command ?? "";
